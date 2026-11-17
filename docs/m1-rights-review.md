@@ -2,6 +2,8 @@
 
 Reviewed on 17 November 2026 using the public GitHub API, public Hugging Face dataset metadata and pinned public license files. This is a project rights review, not legal advice.
 
+The follow-up qualification in `docs/m1-rights-qualification.md` separates source-license research that the project can complete from the user's remaining legal and policy decisions. This file remains the initial source-review record.
+
 ## Benchmark metadata
 
 - SWE-bench code repository license: MIT, observed at https://github.com/SWE-bench/SWE-bench/blob/main/LICENSE.
@@ -30,4 +32,4 @@ A candidate can become accepted only when both are true:
 1. Its repository and issue/test source terms are accepted for the intended local evaluation use, including any decision about GPL-licensed Pylint source and the undeclared SWE-bench Lite dataset metadata.
 2. Its base-fail/fixed-pass verifier behavior is executed and recorded in a separately approved isolated runner.
 
-No candidate is accepted yet. The M2 run in `docs/m2-verification-run.md` completed the base-fail/fixed-pass execution condition for all five candidates, but the rights condition above remains unresolved and independent task-spec review is not recorded.
+No candidate is accepted yet. The M2 run in `docs/m2-verification-run.md` completed the base-fail/fixed-pass execution condition for all five candidates, but the rights condition above remains unresolved and independent task-spec review is not recorded. The prepared review packet is `docs/m1-independent-review-packet.md`.
