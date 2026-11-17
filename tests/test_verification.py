@@ -22,6 +22,9 @@ from test_tasks import task_dict
 SUITE = Path("suites/m1-repair-v0.candidates.jsonl")
 EVIDENCE = Path("suites/m1-repair-v0.source-evidence.jsonl")
 EXECUTION = Path("suites/m1-repair-v0.execution-evidence.jsonl")
+CLEAN_SUITE = Path("proposals/m1-direct-parent-clean-path.research.jsonl")
+CLEAN_EVIDENCE = Path("proposals/m1-direct-parent-clean-path.source-evidence.jsonl")
+CLEAN_EXECUTION = Path("proposals/m1-direct-parent-clean-path.execution-evidence.jsonl")
 
 
 def evidence_dict(task_id="m1-example-task", source_ref="a" * 40, **overrides):
@@ -181,6 +184,30 @@ class ExecutionEvidenceTests(unittest.TestCase):
         ancestor_rows = {row["id"] for row in status["tasks"] if row["base_relation"] == "ancestor"}
         self.assertEqual(ancestor_rows, {"m1-xarray-unstack-single-dim", "m1-pytest-number-docstring"})
         self.assertIn("ancestor-base evidence qualification", status["remaining_acceptance_work"][0])
+
+    def test_clean_path_package_records_five_verified_candidates(self):
+        status = build_acceptance_status(
+            load_suite(CLEAN_SUITE),
+            load_evidence(CLEAN_EVIDENCE),
+            load_execution_evidence(CLEAN_EXECUTION),
+        )
+        self.assertEqual(status["status"], "upstream_source_verified_not_accepted")
+        self.assertEqual(status["task_count"], 5)
+        self.assertEqual(status["upstream_source_verified_count"], 5)
+        self.assertEqual(status["accepted_count"], 0)
+        self.assertEqual(status["model_or_agent_runs"], 0)
+        rows = {row["id"]: row for row in status["tasks"]}
+        self.assertEqual(rows["m1-click-hyphenated-help-wrap"]["base_relation"], "direct-parent")
+        self.assertEqual(rows["m1-xarray-unstack-single-dim"]["ancestor_gap_commits"], 0)
+        self.assertEqual(rows["m1-pytest-number-docstring"]["ancestor_gap_commits"], 0)
+        self.assertTrue(all(row["base_exit_code"] == 1 for row in status["tasks"]))
+        self.assertTrue(all(row["fixed_exit_code"] == 0 for row in status["tasks"]))
+
+    def test_source_evidence_allows_no_benchmark_for_direct_upstream_candidate(self):
+        evidence = evidence_dict()
+        evidence["benchmark"] = None
+        parsed = parse_evidence(evidence)
+        self.assertIsNone(parsed.benchmark_dataset)
 
     def test_execution_source_mismatch_fails_closed(self):
         task = next(iter(load_suite(SUITE)))
