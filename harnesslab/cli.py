@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .compare import Outcome, compare
+from .tasks import ManifestError, load_suite, suite_summary
 
 
 def load(path: str) -> list[Outcome]:
@@ -31,7 +32,18 @@ def main(argv=None) -> int:
     cmd.add_argument("--resamples", type=int, default=10000)
     cmd.add_argument("--seed", type=int, default=0)
     cmd.add_argument("--min-tasks", type=int, default=20)
+    suite = sub.add_parser("validate-suite", help="Validate a task manifest without running it")
+    suite.add_argument("suite")
+    suite.add_argument("--min-accepted", type=int, default=0)
     args = parser.parse_args(argv)
+    if args.command == "validate-suite":
+        try:
+            summary = suite_summary(load_suite(args.suite))
+        except (ManifestError, OSError) as exc:
+            parser.exit(2, f"Invalid suite: {exc}\n")
+        print(json.dumps(summary, sort_keys=True, indent=2))
+        return 0 if summary["accepted_count"] >= args.min_accepted else 3
+
     try:
         result = compare(load(args.baseline), load(args.candidate),
                          margin=args.margin, confidence=args.confidence,
