@@ -172,14 +172,18 @@ matching runner/task/verifier identity, ordinary base failure and fixed pass,
 and no model access, benchmark data, secrets, artifact uploads or retries. It
 rejects results for a blocked manifest. The command validates records only; it
 does not execute, replay or authenticate a runner. See
-`docs/m6-run-result-intake.md`. The clean package has no real result file.
+`docs/m6-run-result-intake.md` and the one-shot M7 run record in
+`docs/m7-direct-upstream-verifier-run.md`. The M7 records validate against the
+prepared manifest; they verify harness execution and intake only, not AI
+evaluation.
 
 ## Not yet verified
 
 - No real-model call, coding-agent run or benchmark result.
 - No published package or always-on service.
 - No verified free inference credentials or account quota.
-- No accepted five-task historical-repair suite or benchmark-data rights review.
+- No coding-agent, model or benchmark-data rights review or run. The five-task
+  historical-repair suite is accepted only for direct-upstream verification.
 - No statistical coverage/power calibration or independent validation.
 
 The local development environment has no Docker daemon and around 2 GB RAM.
