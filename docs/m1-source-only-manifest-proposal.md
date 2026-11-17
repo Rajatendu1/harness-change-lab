@@ -34,7 +34,7 @@ For a future `m1-task-card-source-only-v0` schema:
 
 - Keep `id`, `issue`, `source`, `setup`, `verify`, `timeout_s`, `tags`, `status` and `rights`.
 - Require `provenance.selection_source = "direct-upstream"`.
-- Require `issue_url`, `issue_title`, `fix_pr_url`, `fix_pr_title`, `fixed_commit`, `test_files`, `regression_test_source` and `fail_to_pass`.
+- Require `issue_url`, `issue_title`, `fix_pr_url`, `fix_pr_title`, `fixed_commit`, `test_files`, `applied_test_files`, `regression_test_source` and `fail_to_pass`.
 - Require the matching source-evidence record to carry `fixed_first_parent`, `base_relation`, `ancestor_gap_commits`, `fixed_commit_kind`, `implementation_files` and `test_patch_url`, so the direct-parent/ancestor distinction cannot disappear again.
 - Reject `benchmark`, `instance_id`, `dataset_url`, `environment_setup_commit` and `source_version` in source-only task cards.
 - Keep every task `candidate` and `rights.status = "pending"` until the owner accepts the source terms and independent review is recorded.
@@ -43,7 +43,7 @@ A matching source-evidence v1 schema should keep upstream license and fixed-comm
 
 ## Hash and evidence effects
 
-The draft preserves every verifier hash because the verifier commands and timeouts are unchanged. Task hashes change because provenance and rights text are part of the deterministic task identity. After the corrected `fixed_commit` naming, the proposed suite hash is `815890ef1089065882ba8cd06bb43c877ca53d1159a672943465ea0c4f9f5115`, compared with active suite hash `b70c18f9d6be2044e5db385d4988f3762170301eafea6156662cc338143d2834`.
+The draft preserves every verifier hash because the verifier commands and timeouts are unchanged. Task hashes change because provenance and rights text are part of the deterministic task identity. After the corrected `fixed_commit` naming and applied-test-file scope, the proposed suite hash is `f2da202109081d83e95c6e6e0698351f0f0f25519fb96634f560ed400ccb2f5c`, compared with active suite hash `b70c18f9d6be2044e5db385d4988f3762170301eafea6156662cc338143d2834`.
 
 The existing M2 evidence can be reviewed against the draft without a new run because task IDs, base commits, fixed commits, setup commands, verifier commands and timeouts are unchanged. That is an evidence-applicability review, not automatic acceptance.
 
@@ -59,4 +59,4 @@ The existing M2 evidence can be reviewed against the draft without a new run bec
 
 ## Structural check performed locally
 
-The draft has five lines, preserves task IDs/source/setup/verify/timeout values, matches the direct issue and PR URLs and fixed commits in the existing source evidence, and contains no `benchmark`, `instance_id`, `dataset_url`, `environment_setup_commit` or `source_version` fields.
+The draft has five lines, preserves task IDs/source/setup/verify/timeout values, matches the direct issue and PR URLs and fixed commits in the existing source evidence, records the actual M2 applied test file for each task, and contains no `benchmark`, `instance_id`, `dataset_url`, `environment_setup_commit` or `source_version` fields.
