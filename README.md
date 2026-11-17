@@ -70,6 +70,21 @@ This is **fixed-code container smoke evidence only**, not an agent benchmark,
 model-quality result, completed repair suite or hardened multi-tenant sandbox.
 The source code is published under MIT with owner approval.
 
+## M1 candidate registry
+
+A five-candidate structural registry now exists at
+`suites/m1-repair-v0.candidates.jsonl` with deterministic task and verifier
+hashes, provenance and pending rights reviews. Validate it without executing
+external code:
+
+```sh
+python -m harnesslab.cli validate-suite suites/m1-repair-v0.candidates.jsonl
+```
+
+This is candidate-registry progress only. It has 5 candidates, 0 accepted
+tasks and 0 benchmark results; rights review and base-fail/fixed-pass execution
+validation are still open.
+
 ## Not yet verified
 
 - No real-model call, coding-agent run or benchmark result.
