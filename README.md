@@ -128,7 +128,8 @@ python -m harnesslab.cli acceptance-status \
   proposals/m1-direct-parent-clean-path.execution-evidence.jsonl
 ```
 
-See `docs/m3-clean-direct-verification-run.md` for the one-shot M3 run record.
+See `docs/m3-clean-direct-verification-run.md` for the one-shot M3 run record
+and `docs/m3-m4-independent-review.md` for the read-only independent review.
 This package is candidate evidence only; it is not an adopted suite, model
 result, coding-agent benchmark or completed harness milestone.
 
