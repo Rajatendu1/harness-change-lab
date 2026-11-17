@@ -13,7 +13,7 @@ Scope: read-only review of the clean direct-parent five-task package, M3 executi
 
 ## Authority anchor
 
-The M3 dispatch authority was reconciled against the original WhatsApp exchange: the proposal message `wamid.HBgMOTE5OTAzMDczNzkwFQIAERgSOUUyREE1REQ4MzhFMUREMUY0AA==` offered one free three-candidate batch with 20-minute per-candidate caps, no AI-model calls, no private data, no paid services and no automatic retries; the user replied `Yes` in `wamid.HBgMOTE5OTAzMDczNzkwFQIAEhggQUM5MkQ4QTY1QTNEMTMzNTUxOEEzM0M5Qzc2NjU1RTkA`. The reviewer confirmed that anchor. No unauthorized-run concern remains on that evidence.
+The M3 dispatch authority was reconciled against a private user-channel approval record retained by Instinct. That private record contains the proposal for one free three-candidate batch with 20-minute per-candidate caps, no AI-model calls, no private data, no paid services and no automatic retries, followed by the owner's affirmative reply. The reviewer confirmed that anchor. No unauthorized-run concern remains on that private evidence.
 
 ## Record repair
 
