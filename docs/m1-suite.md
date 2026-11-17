@@ -70,5 +70,7 @@ python -m harnesslab.cli acceptance-status \
 ```
 
 The status is `upstream_source_verified_not_accepted` because rights review and
-independent task-spec review remain open. See `docs/m2-verification-proposal.md`
+independent task-spec review remain open. See `docs/m1-rights-qualification.md`
+for the remaining rights decisions and `docs/m1-independent-review-packet.md`
+for the prepared no-rerun review process. See `docs/m2-verification-proposal.md`
 for the original bounded execution scope.
