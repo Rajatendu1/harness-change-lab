@@ -1,0 +1,15 @@
+name: Manual container feasibility
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolation-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - name: Fixed-code isolation smoke only
+        run: python3 scripts/container_smoke.py
