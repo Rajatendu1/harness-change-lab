@@ -1,10 +1,15 @@
-# Proposed manual CI pilot, pending owner approval
+# Manual CI pilot: approved and executed
 
-This is a review document, NOT an installed workflow. The proposed first run is
-an isolation and resource check with fixed test code. It cannot satisfy the
-real-agent or five-repair-task milestone.
+The owner approved the public repository, MIT license for original code and this
+bounded manual Docker test on 17 November 2026. The installed workflow is
+`.github/workflows/manual-container.yml`.
 
-Proposed public repository: `Rajatendu1/harness-change-lab`.
+The [first run](https://github.com/Rajatendu1/harness-change-lab/actions/runs/44047033684)
+passed: 18-second job, 24-second workflow, no uploaded artifacts. This is an
+isolation and resource check with fixed code, not real-agent or five-repair-task
+milestone completion. See the README for observed probes and remaining gates.
+
+Repository: `Rajatendu1/harness-change-lab`.
 
 - Existing signed-in account; no new account, OAuth grant, PAT or gh CLI access.
 - Standard `ubuntu-24.04` only, at most 10 minutes per explicit manual run.
@@ -22,7 +27,7 @@ Proposed public repository: `Rajatendu1/harness-change-lab`.
 - Only after this passes should task-suite and real-agent sandbox acceptance be
   attempted. A container is not a hardened multi-tenant security service.
 
-Proposed YAML for later review and installation:
+Installed workflow:
 
 ```yaml
 name: Manual container feasibility
@@ -44,7 +49,7 @@ jobs:
 
 The checkout SHA was resolved from the official actions/checkout v5 tag on
 17 Nov2026. The image manifest was read from the Docker Hub official Python
-repository the same day. Recheck supply-chain provenance before actual execution.
+repository the same day. Recheck supply-chain provenance before future execution.
 No model response or target repository is executed by this pilot.
 
 Official sources:
