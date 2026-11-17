@@ -7,13 +7,21 @@ import unittest
 
 from harnesslab.cli import main
 from harnesslab.tasks import ManifestError, load_suite
-from harnesslab.verification import build_verification_plan, load_evidence, parse_evidence
+from harnesslab.verification import (
+    build_acceptance_status,
+    build_verification_plan,
+    load_evidence,
+    load_execution_evidence,
+    parse_evidence,
+    parse_execution_evidence,
+)
 
 from test_tasks import task_dict
 
 
 SUITE = Path("suites/m1-repair-v0.candidates.jsonl")
 EVIDENCE = Path("suites/m1-repair-v0.source-evidence.jsonl")
+EXECUTION = Path("suites/m1-repair-v0.execution-evidence.jsonl")
 
 
 def evidence_dict(task_id="m1-example-task", source_ref="a" * 40, **overrides):
@@ -42,6 +50,35 @@ def evidence_dict(task_id="m1-example-task", source_ref="a" * 40, **overrides):
             "sha": "d" * 40,
             "license_status": "not declared",
         },
+    }
+    item.update(overrides)
+    return item
+
+
+def execution_dict(task_id="m1-example-task", source_ref="a" * 40, fixed_ref="b" * 40, **overrides):
+    item = {
+        "id": task_id,
+        "status": "upstream-source-verified",
+        "run": {
+            "url": "https://github.com/example/project/actions/runs/123456789",
+            "workflow_commit": "e" * 40,
+            "workflow_sha256": "f" * 64,
+            "runner_label": "ubuntu-22.04",
+            "job_timeout_minutes": 20,
+            "benchmark_data_used": False,
+            "secrets_model_credentials_cache_artifacts": False,
+            "artifacts_count": 0,
+            "summary_caveat": "Example summary caveat.",
+        },
+        "runtime": {
+            "python": "3.11.0",
+            "package_name": "example",
+            "package_version": "1.0",
+            "pytest": "7.0.0",
+        },
+        "base": {"exit_code": 1, "duration_s": 1, "failed_count": 1},
+        "fixed": {"exit_code": 0, "duration_s": 1, "passed_count": 1},
+        "source": {"base_commit": source_ref, "fixed_merge_commit": fixed_ref},
     }
     item.update(overrides)
     return item
@@ -78,6 +115,45 @@ class SourceEvidenceTests(unittest.TestCase):
             parse_evidence(bad)
 
 
+class ExecutionEvidenceTests(unittest.TestCase):
+    def test_real_acceptance_status_records_verified_sources_and_blockers(self):
+        status = build_acceptance_status(
+            load_suite(SUITE),
+            load_evidence(EVIDENCE),
+            load_execution_evidence(EXECUTION),
+        )
+        self.assertEqual(status["status"], "upstream_source_verified_not_accepted")
+        self.assertEqual(status["task_count"], 5)
+        self.assertEqual(status["upstream_source_verified_count"], 5)
+        self.assertEqual(status["accepted_count"], 0)
+        self.assertEqual(status["rights_pending_count"], 5)
+        self.assertEqual(status["model_or_agent_runs"], 0)
+        self.assertFalse(status["benchmark_data_used"])
+        self.assertIn("accept repository and benchmark-data rights", status["remaining_acceptance_work"][0])
+        self.assertTrue(all(row["base_exit_code"] == 1 for row in status["tasks"]))
+        self.assertTrue(all(row["fixed_exit_code"] == 0 for row in status["tasks"]))
+        self.assertTrue(all("independent task-spec review" in row["blockers"][-1] for row in status["tasks"]))
+
+    def test_execution_source_mismatch_fails_closed(self):
+        task = next(iter(load_suite(SUITE)))
+        evidence = parse_evidence(evidence_dict(task.id, task.source_ref))
+        execution = parse_execution_evidence(execution_dict(task.id, "0" * 40, evidence.fixed_merge_commit))
+        with self.assertRaisesRegex(ManifestError, "base commit does not match"):
+            build_acceptance_status([task], [evidence], [execution])
+
+    def test_execution_requires_ordinary_base_failure(self):
+        bad = execution_dict()
+        bad["base"]["exit_code"] = 2
+        with self.assertRaisesRegex(ManifestError, "ordinary pytest failure"):
+            parse_execution_evidence(bad)
+
+    def test_m2_workflow_summary_label_matches_actual_runner(self):
+        workflow = Path(".github/workflows/m2-upstream-verification.yml").read_text(encoding="utf-8")
+        self.assertIn("runs-on: ubuntu-22.04", workflow)
+        self.assertIn("Runner | `ubuntu-22.04`", workflow)
+        self.assertNotIn("Runner | `ubuntu-24.04`", workflow)
+
+
 class VerificationCliTests(unittest.TestCase):
     def test_plan_verification_prints_json(self):
         output = io.StringIO()
@@ -98,6 +174,16 @@ class VerificationCliTests(unittest.TestCase):
                 with self.assertRaises(SystemExit) as raised:
                     main(["plan-verification", str(suite), str(evidence)])
             self.assertEqual(raised.exception.code, 2)
+
+    def test_acceptance_status_prints_verified_not_accepted(self):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(main(["acceptance-status", str(SUITE), str(EVIDENCE), str(EXECUTION)]), 0)
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["schema"], "m1-acceptance-status-v0")
+        self.assertEqual(payload["status"], "upstream_source_verified_not_accepted")
+        self.assertEqual(payload["upstream_source_verified_count"], 5)
+        self.assertEqual(payload["accepted_count"], 0)
 
 
 if __name__ == "__main__":
