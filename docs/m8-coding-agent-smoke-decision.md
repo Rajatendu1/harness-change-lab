@@ -2,7 +2,7 @@
 
 Date: 17 November 2026.
 
-Status: decision pending. No coding-agent, model or provider API run is authorized or scheduled by this document.
+Status: execution complete. One bounded coding-agent smoke ran under the approved free route; see `docs/m8-coding-agent-smoke-run.md`. Any further coding-agent execution requires separate approval.
 
 ## Purpose
 
@@ -13,8 +13,8 @@ M8 would be pipeline evidence only. Five tasks and one trial per task cannot sup
 ## Current route under consideration
 
 - Runner: Aider, because it supports scripted single-message runs and OpenAI-compatible providers.
-- Provider and model: pending owner decision; the route must be privately verified as free, active and sufficiently provisioned before dispatch.
-- Credential: a fresh M8-specific provider key, created only after approval and stored only as a GitHub Actions secret for this repository's manual workflow.
+- Provider and model: privately verified as free, active and sufficiently provisioned before dispatch; the public run record identifies the route used.
+- Credential: a fresh M8-specific provider key was created only after approval, stored only as a GitHub Actions secret for this repository's manual workflow, and revoked after the completed run.
 - Platform: one manually dispatched GitHub Actions workflow on the public repository.
 - Trial plan: five accepted tasks, one agent trial per task, five trials total.
 - Time bound: 20 minutes per task.
