@@ -1,0 +1,1 @@
+"""Paired harness comparison foundation."""
