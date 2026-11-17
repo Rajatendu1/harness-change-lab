@@ -131,7 +131,8 @@ python -m harnesslab.cli acceptance-status \
 See `docs/m3-clean-direct-verification-run.md` for the one-shot M3 run record
 and `docs/m3-m4-independent-review.md` for the read-only independent review.
 See `docs/m4-intended-use-research.md` for the current benchmark intended-use
-and dataset-terms boundary.
+and dataset-terms boundary, and `docs/m5-review-gate-reconciliation.md` for the
+machine-readable review/acceptance gate split.
 This package is candidate evidence only; it is not an adopted suite, model
 result, coding-agent benchmark or completed harness milestone.
 
@@ -148,17 +149,20 @@ python -m harnesslab.cli prepare-run-manifest \
   proposals/m1-direct-parent-clean-path.research.jsonl \
   proposals/m1-direct-parent-clean-path.source-evidence.jsonl \
   proposals/m1-direct-parent-clean-path.execution-evidence.jsonl \
+  proposals/m3-m4-independent-review.evidence.jsonl \
   --runner-name fixture-runner \
   --runner-version 0.1.0 \
   --runner-config-sha256 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ```
 
 The current clean-path package exits with code 3 and status
-`blocked_not_runnable` because all five tasks remain candidates with rights and
-independent review unresolved. `validate-run-manifest` recomputes the contract
-from the same suite and evidence, and rejects altered task commands, verifier
-identity, provenance, runner identity, trial plan or approval state. This is
-usable fail-closed harness behavior, not an Inspect or promptfoo adapter claim.
+`blocked_not_runnable`. The machine-readable review evidence records that
+independent read-only review exists, while owner task acceptance and repository
+rights remain pending. `validate-run-manifest` recomputes the contract from the
+same suite, source, execution and review evidence, and rejects altered task
+commands, verifier identity, provenance, runner identity, trial plan, review
+scope or approval state. This is usable fail-closed harness behavior, not an
+Inspect or promptfoo adapter claim.
 
 ## Not yet verified
 
