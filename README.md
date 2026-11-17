@@ -99,8 +99,11 @@ python -m harnesslab.cli acceptance-status \
   suites/m1-repair-v0.execution-evidence.jsonl
 ```
 
-The current status is `upstream_source_verified_not_accepted`. Model access was
-not used for M2 and remains outside the verified scope.
+The current status is `upstream_source_verified_not_accepted`. The rights
+decision split is recorded in `docs/m1-rights-qualification.md`, and the prepared
+no-rerun independent review process is in
+`docs/m1-independent-review-packet.md`. Model access was not used for M2 and
+remains outside the verified scope.
 
 ## Not yet verified
 
