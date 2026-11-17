@@ -1,6 +1,6 @@
 # M2 candidate verification proposal
 
-Prepared on 17 November 2026. This is a proposal only; it has not been approved or executed.
+Prepared on 17 November 2026. The corrected bounded workflow was later approved and executed once. This file remains the proposal and scope record; the result is in `docs/m2-verification-run.md`.
 
 ## What is now prepared without a new run
 
@@ -37,7 +37,7 @@ Model access is **not** required for this M2 verification. It would only become 
 If approved, add and manually dispatch one new workflow with this exact scope:
 
 - One explicit `workflow_dispatch` run only.
-- Five matrix jobs, one per candidate, on GitHub-hosted `ubuntu-24.04` runners.
+- Five matrix jobs, one per candidate, on GitHub-hosted `ubuntu-22.04` runners.
 - At most 20 minutes per candidate job.
 - `permissions: contents: read`; no secrets, model credentials, repository write scope, cache, artifact upload, package publication or paid resource.
 - Clone only the public repository named by each candidate.
@@ -49,7 +49,7 @@ If approved, add and manually dispatch one new workflow with this exact scope:
 
 ## Free-runner guard
 
-GitHub's current billing documentation says standard GitHub-hosted runners in public repositories remain free independently of included compute usage, while larger runners are billed for public repositories. GitHub's current limits documentation gives a Free account 20 concurrent standard GitHub-hosted jobs; this proposal needs 5. The repository is public, the workflow must use only standard `ubuntu-24.04`, and it must not use larger runners, cache or artifacts.
+GitHub's current billing documentation says standard GitHub-hosted runners in public repositories remain free independently of included compute usage, while larger runners are billed for public repositories. GitHub's current limits documentation gives a Free account 20 concurrent standard GitHub-hosted jobs; this proposal needs 5. The repository is public, the workflow must use only standard `ubuntu-22.04`, and it must not use larger runners, cache or artifacts.
 
 If GitHub reports that the repository is no longer public, asks for a paid runner, or cannot schedule standard public-repo runners without billing, cancel the run. There is no paid fallback.
 
