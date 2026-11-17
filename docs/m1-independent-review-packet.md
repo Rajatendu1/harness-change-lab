@@ -36,7 +36,7 @@ The first independent review returned `needs-changes`: it corroborated the core 
 6. For a `direct-parent` relation, the fixed first parent matches the selected base commit and the ancestor gap is zero. Flask, Requests and Pylint currently satisfy this direct-parent check.
 7. For an `ancestor` relation, the actual fixed first parent and positive ancestor gap are recorded and the pair stays evidence-qualified. Xarray is 7 commits back from its fixed commit and pytest is 18 commits back; neither is accepted by direct-parent evidence alone.
 8. The execution evidence names the workflow SHA and workflow file hash used for the run.
-9. The M2 execution evidence records one upstream fixed-commit test patch per task and applies that patch only to the base checkout.
+9. The M2 execution evidence records the exact local patch identity (`git diff --binary <fixed>^ <fixed> -- <matrix.test_path>`) and one applied test file per task. The `.diff` URL is a public full-diff review locator, not the exact applied patch identity.
 10. The base run is expected to fail and the fixed run is expected to pass.
 11. The execution record gives the runner Python/dependency compatibility evidence and run timing.
 12. No benchmark dataset rows, saved artifacts, secrets, model credentials, paid fallback or automatic retry are present.
