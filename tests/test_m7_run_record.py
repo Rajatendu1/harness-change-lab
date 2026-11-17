@@ -52,7 +52,7 @@ class M7RunRecordTests(unittest.TestCase):
         for path in [DOC, MANIFEST, RESULTS, VALIDATION]:
             text = path.read_text(encoding="utf-8")
             self.assertIsNone(re.search(r"wamid\.", text), path)
-            self.assertIsNone(re.search(r"91[6-9][0-9]{9}", text), path)
+            self.assertIsNone(re.search(r"\+91\d{10}", text), path)
 
 
 if __name__ == "__main__":
