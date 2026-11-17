@@ -13,7 +13,7 @@ concurrency:
 jobs:
   verify-upstream-source:
     name: ${{ matrix.id }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -22,41 +22,70 @@ jobs:
           - id: m1-flask-dotted-blueprint
             repo: pallets/flask
             package: Flask
+            python_version: '3.9'
             base_commit: d8c37f43724cd9fb0870f77877b7c4c7e38a19e0
             fixed_commit: 08e459e823235eecd86c635653f4bd6d6003c2b3
-            setup: python -m pip install -e . pytest
+            test_path: tests/test_blueprints.py
+            setup: >-
+              python -m pip install -e .
+              'Werkzeug==2.0.0' 'Jinja2==3.0.0' 'MarkupSafe==2.0.0'
+              'itsdangerous==2.0.0' 'click==8.0.0' 'pytest==6.2.4'
             verify: python -m pytest -q tests/test_blueprints.py::test_dotted_name_not_allowed tests/test_blueprints.py::test_route_decorator_custom_endpoint_with_dots
           - id: m1-requests-decode-unicode
             repo: psf/requests
             package: requests
+            python_version: '3.7'
             base_commit: 36453b95b13079296776d11b09cab2567ea3e703
             fixed_commit: 92fe51c0afd9239388d2c8bb17dc46babdf7881f
-            setup: python -m pip install -e . pytest
+            test_path: tests/test_requests.py
+            setup: >-
+              python -m pip install -e .
+              'pytest==2.8.7' 'py==1.4.31'
             verify: python -m pytest -q tests/test_requests.py::TestRequests::test_response_decode_unicode
           - id: m1-xarray-unstack-single-dim
             repo: pydata/xarray
             package: xarray
+            python_version: '3.7'
             base_commit: a64cf2d5476e7bbda099b34c40b7be1880dbd39a
             fixed_commit: 329cefb99220042a586c2b5fdbea679fd8a89cd5
-            setup: python -m pip install -e . pytest
+            test_path: xarray/tests/test_dataset.py
+            setup: >-
+              python -m pip install 'numpy==1.17.5' 'pandas==1.0.5'
+              'python-dateutil==2.8.2' 'pytz==2020.1' 'six==1.15.0'
+              'setuptools==41.6.0' 'setuptools_scm==6.4.2' 'pytest==6.2.4'
+              && python -m pip install --no-deps -e .
             verify: python -m pytest -q xarray/tests/test_dataset.py::TestDataset::test_to_stacked_array_to_unstacked_dataset
           - id: m1-pylint-punctuation-notes
             repo: pylint-dev/pylint
             package: pylint
+            python_version: '3.10'
             base_commit: 182cc539b8154c0710fcea7e522267e42eba8899
             fixed_commit: a1df7685a4e6a05b519ea011f16a2f0d49d08032
-            setup: python -m pip install -e . pytest
+            test_path: tests/checkers/unittest_misc.py
+            setup: >-
+              python -m pip install -e .
+              'astroid==2.9.3' 'dill==0.3.4' 'platformdirs==2.2.0'
+              'isort==5.10.1' 'mccabe==0.6.0' 'tomli==2.0.1'
+              'typing-extensions==4.1.1' 'pytest==7.0.1'
             verify: python -m pytest -q tests/checkers/unittest_misc.py::TestFixme::test_non_alphanumeric_codetag
           - id: m1-pytest-number-docstring
             repo: pytest-dev/pytest
             package: pytest
+            python_version: '3.11'
             base_commit: 6995257cf470d2143ad1683824962de4071c0eb7
             fixed_commit: 084d756ae6a03bba7a257ebae3c83095b228988f
-            setup: python -m pip install -e . pytest
+            test_path: testing/test_assertrewrite.py
+            setup: >-
+              python -m pip install -e .
+              'pluggy==1.0.0' 'iniconfig==2.0.0' 'packaging==23.1'
             verify: python -m pytest -q testing/test_assertrewrite.py::TestIssue11140::test_constant_not_picked_as_module_docstring
     env:
       REPO_URL: https://github.com/${{ matrix.repo }}.git
     steps:
+      - name: Set up historical Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python_version }}
       - name: Clone pinned upstream repository only
         run: |
           set -euo pipefail
@@ -64,12 +93,22 @@ jobs:
           cd upstream
           git cat-file -e '${{ matrix.base_commit }}^{commit}'
           git cat-file -e '${{ matrix.fixed_commit }}^{commit}'
+          git cat-file -e '${{ matrix.fixed_commit }}^'
           git rev-parse --is-shallow-repository
-      - name: Check out and install base source
+      - name: Apply only the fixed commit's upstream test patch to base
         working-directory: upstream
         run: |
           set -euo pipefail
           git checkout --detach '${{ matrix.base_commit }}'
+          git diff --binary '${{ matrix.fixed_commit }}^' '${{ matrix.fixed_commit }}' -- '${{ matrix.test_path }}' >/tmp/m2-test.patch
+          test -s /tmp/m2-test.patch
+          git apply --check /tmp/m2-test.patch
+          git apply /tmp/m2-test.patch
+          git diff --check
+      - name: Install base source
+        working-directory: upstream
+        run: |
+          set -euo pipefail
           ${{ matrix.setup }}
       - name: Verify base source fails
         working-directory: upstream
@@ -99,7 +138,7 @@ jobs:
         working-directory: upstream
         run: |
           set -euo pipefail
-          git checkout --detach '${{ matrix.fixed_commit }}'
+          git reset --hard '${{ matrix.fixed_commit }}'
           ${{ matrix.setup }}
       - name: Verify fixed source passes
         working-directory: upstream
