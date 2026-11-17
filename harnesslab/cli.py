@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .compare import Outcome, compare
+from .run_manifest import build_run_manifest, validate_run_manifest
 from .tasks import ManifestError, load_suite, suite_summary
 from .verification import (
     build_acceptance_status,
@@ -48,7 +49,51 @@ def main(argv=None) -> int:
     acceptance.add_argument("suite")
     acceptance.add_argument("evidence")
     acceptance.add_argument("execution")
+    prepare = sub.add_parser("prepare-run-manifest", help="Prepare a non-executing runner manifest contract")
+    prepare.add_argument("suite")
+    prepare.add_argument("evidence")
+    prepare.add_argument("execution")
+    prepare.add_argument("--runner-name", required=True)
+    prepare.add_argument("--runner-version", required=True)
+    prepare.add_argument("--runner-config-sha256", required=True)
+    prepare.add_argument("--trials-per-task", type=int, default=3)
+    prepare.add_argument("--max-concurrency", type=int, default=1)
+    validate_run = sub.add_parser("validate-run-manifest", help="Validate a manifest against the same task evidence")
+    validate_run.add_argument("manifest")
+    validate_run.add_argument("suite")
+    validate_run.add_argument("evidence")
+    validate_run.add_argument("execution")
     args = parser.parse_args(argv)
+    if args.command == "prepare-run-manifest":
+        try:
+            manifest = build_run_manifest(
+                load_suite(args.suite),
+                load_evidence(args.evidence),
+                load_execution_evidence(args.execution),
+                runner_name=args.runner_name,
+                runner_version=args.runner_version,
+                runner_config_sha256=args.runner_config_sha256,
+                trials_per_task=args.trials_per_task,
+                max_concurrency=args.max_concurrency,
+            )
+        except (ManifestError, OSError) as exc:
+            parser.exit(2, f"Invalid run manifest request: {exc}\n")
+        print(json.dumps(manifest, sort_keys=True, indent=2))
+        return 0 if manifest["status"] == "ready_not_executed" else 3
+    if args.command == "validate-run-manifest":
+        try:
+            with Path(args.manifest).open(encoding="utf-8") as stream:
+                manifest = json.load(stream)
+            validate_run_manifest(
+                manifest,
+                load_suite(args.suite),
+                load_evidence(args.evidence),
+                load_execution_evidence(args.execution),
+            )
+        except (ManifestError, OSError, json.JSONDecodeError) as exc:
+            parser.exit(2, f"Invalid run manifest: {exc}\n")
+        print(json.dumps({"schema": "m4-run-manifest-validation-v0", "status": "contract-valid", "manifest_sha256": manifest["manifest_sha256"]}, sort_keys=True, indent=2))
+        return 0
     if args.command == "acceptance-status":
         try:
             status = build_acceptance_status(
