@@ -14,6 +14,7 @@ _SHA = re.compile(r"^[0-9a-f]{40}$")
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _EVIDENCE_STATUS = "metadata-verified"
 _EXECUTION_STATUS = "upstream-source-verified"
+_REVIEW_STATUS = "engineering-review-recorded-not-acceptance"
 _RUN_URL = re.compile(r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/\d+$")
 
 
@@ -45,6 +46,20 @@ class SourceEvidence:
     benchmark_sha: str | None
     benchmark_license_status: str | None
     status: str
+
+
+@dataclass(frozen=True)
+class ReviewEvidence:
+    id: str
+    status: str
+    suite_sha256: str
+    task_ids: tuple[str, ...]
+    record_url: str
+    record_commit: str
+    reviewed_at: str
+    scope: str
+    limitations: tuple[str, ...]
+    acceptance_decision: str
 
 
 @dataclass(frozen=True)
@@ -277,6 +292,62 @@ def parse_execution_evidence(mapping: dict[str, Any]) -> ExecutionEvidence:
     )
 
 
+def parse_review_evidence(mapping: dict[str, Any]) -> ReviewEvidence:
+    """Validate one independent-review record without treating it as approval.
+
+    A review row may satisfy the bookkeeping fact that review evidence exists.
+    It must not claim owner task acceptance, rights acceptance or execution
+    authority.
+    """
+    if not isinstance(mapping, dict):
+        raise ManifestError("each review-evidence line must be a JSON object")
+    task_ids = mapping.get("task_ids")
+    if not isinstance(task_ids, list) or not task_ids or not all(isinstance(item, str) and item for item in task_ids):
+        raise ManifestError("review task_ids must be a non-empty list")
+    limitations = mapping.get("limitations")
+    if not isinstance(limitations, list) or not limitations or not all(isinstance(item, str) and len(item.strip()) >= 10 for item in limitations):
+        raise ManifestError("review limitations must list explicit scope limits")
+    status = _text(mapping, "status")
+    if status != _REVIEW_STATUS:
+        raise ManifestError(f"review status must be {_REVIEW_STATUS}")
+    acceptance_decision = _text(mapping, "acceptance_decision")
+    if acceptance_decision != "none":
+        raise ManifestError("review evidence cannot record task acceptance or approval")
+    return ReviewEvidence(
+        id=_text(mapping, "id", min_length=3),
+        status=status,
+        suite_sha256=_hex64(mapping, "suite_sha256"),
+        task_ids=tuple(item.strip() for item in task_ids),
+        record_url=_https(mapping, "record_url"),
+        record_commit=_sha(mapping, "record_commit"),
+        reviewed_at=_text(mapping, "reviewed_at", min_length=10),
+        scope=_text(mapping, "scope", min_length=20),
+        limitations=tuple(item.strip() for item in limitations),
+        acceptance_decision=acceptance_decision,
+    )
+
+
+def load_review_evidence(path: str | Path) -> list[ReviewEvidence]:
+    """Load independent-review JSONL without converting it into approval."""
+    items: list[ReviewEvidence] = []
+    seen: set[str] = set()
+    with Path(path).open(encoding="utf-8") as stream:
+        for line_number, line in enumerate(stream, 1):
+            if not line.strip():
+                continue
+            try:
+                item = parse_review_evidence(json.loads(line))
+            except (json.JSONDecodeError, ManifestError, TypeError) as exc:
+                raise ManifestError(f"{path}:{line_number}: {exc}") from exc
+            if item.id in seen:
+                raise ManifestError(f"{path}:{line_number}: duplicate review id {item.id}")
+            seen.add(item.id)
+            items.append(item)
+    if not items:
+        raise ManifestError(f"{path}: review evidence has no rows")
+    return items
+
+
 def load_execution_evidence(path: str | Path) -> list[ExecutionEvidence]:
     """Load an execution-evidence JSONL file."""
     items: list[ExecutionEvidence] = []
@@ -302,8 +373,9 @@ def build_acceptance_status(
     tasks: Iterable[TaskSpec],
     evidence_rows: Iterable[SourceEvidence],
     execution_rows: Iterable[ExecutionEvidence],
+    review_rows: Iterable[ReviewEvidence] | None = None,
 ) -> dict[str, Any]:
-    """Summarize verified source evidence and remaining acceptance blockers."""
+    """Summarize verified evidence and remaining acceptance blockers."""
     task_items = list(tasks)
     source = {item.id: item for item in evidence_rows}
     execution = {item.id: item for item in execution_rows}
@@ -314,6 +386,30 @@ def build_acceptance_status(
         raise ManifestError("missing source evidence for: " + ", ".join(missing_source))
     if unknown_execution:
         raise ManifestError("execution evidence does not match a task: " + ", ".join(unknown_execution))
+
+    summary = suite_summary(task_items)
+    review_items = list(review_rows or [])
+    reviewed_task_ids: set[str] = set()
+    review_summaries = []
+    for item in review_items:
+        if item.suite_sha256 != summary["suite_sha256"]:
+            raise ManifestError(f"review evidence {item.id} does not match the suite identity")
+        unknown_tasks = sorted(set(item.task_ids) - task_ids)
+        if unknown_tasks:
+            raise ManifestError(f"review evidence {item.id} names unknown tasks: " + ", ".join(unknown_tasks))
+        duplicate_tasks = reviewed_task_ids & set(item.task_ids)
+        if duplicate_tasks:
+            raise ManifestError("review evidence duplicates task coverage: " + ", ".join(sorted(duplicate_tasks)))
+        reviewed_task_ids.update(item.task_ids)
+        review_summaries.append({
+            "id": item.id,
+            "status": item.status,
+            "record_url": item.record_url,
+            "record_commit": item.record_commit,
+            "reviewed_at": item.reviewed_at,
+            "task_ids": list(item.task_ids),
+            "acceptance_decision": item.acceptance_decision,
+        })
 
     rows = []
     execution_summaries = []
@@ -350,12 +446,20 @@ def build_acceptance_status(
         if source_item.base_relation == "ancestor":
             blockers.append("ancestor-base evidence qualification pending")
         if task.rights.status == "pending":
-            blockers.append("repository and benchmark-data rights review pending")
+            if "no benchmark dataset metadata" in task.rights.data_use.lower():
+                blockers.append("repository rights review pending")
+            else:
+                blockers.append("repository and benchmark-data rights review pending")
         elif task.rights.status != "accepted":
             blockers.append(f"rights review status is {task.rights.status}")
         if execution_item is None:
             blockers.append("base-fail/fixed-pass execution evidence missing")
-        blockers.append("independent task-spec review not recorded")
+        if task.id not in reviewed_task_ids:
+            blockers.append("independent engineering review not recorded")
+        if task.status == "candidate":
+            blockers.append("task acceptance decision pending")
+        elif task.status != "accepted":
+            blockers.append(f"task status is {task.status}")
         rows.append({
             "id": task.id,
             "task_status": task.status,
@@ -366,19 +470,23 @@ def build_acceptance_status(
             "base_exit_code": execution_item.base_exit_code if execution_item else None,
             "fixed_exit_code": execution_item.fixed_exit_code if execution_item else None,
             "accepted": task.status == "accepted",
+            "engineering_review_recorded": task.id in reviewed_task_ids,
             "blockers": blockers,
         })
 
-    summary = suite_summary(task_items)
     verified_count = sum(1 for row in rows if row["execution_status"] == _EXECUTION_STATUS)
     complete = verified_count == len(rows)
-    if any(item.benchmark_dataset is not None for item in source.values()):
+    if any("no benchmark dataset metadata" not in task.rights.data_use.lower() for task in task_items):
         rights_work = "accept repository and benchmark-data rights for the intended evaluation use"
     else:
         rights_work = "accept repository rights for the intended evaluation use"
+    if len(reviewed_task_ids) == len(task_items):
+        review_work = "record owner task-acceptance decisions for every candidate"
+    else:
+        review_work = "record independent engineering review for every candidate"
     remaining_work = [
         rights_work,
-        "record independent review against docs/task-spec.md for every candidate",
+        review_work,
         "obtain separate authority before any coding-agent, model or benchmark-data run",
     ]
     ancestor_tasks = [task.id for task in task_items if source[task.id].base_relation == "ancestor"]
@@ -393,11 +501,19 @@ def build_acceptance_status(
         "upstream_source_verified_count": verified_count,
         "accepted_count": summary["accepted_count"],
         "rights_pending_count": summary["rights_pending_count"],
+        "engineering_review_status": (
+            "recorded_read_only_not_acceptance" if len(reviewed_task_ids) == len(task_items)
+            else "partially_recorded_not_acceptance" if reviewed_task_ids
+            else "not_recorded"
+        ),
+        "engineering_review_recorded_count": len(reviewed_task_ids),
+        "review_evidence_sha256": _digest(review_summaries) if review_summaries else None,
         "model_or_agent_runs": 0,
         "benchmark_data_used": False,
         "remaining_acceptance_work": remaining_work,
         "tasks": rows,
         "execution": execution_summaries,
+        "review": review_summaries,
     }
 
 
