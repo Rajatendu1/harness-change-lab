@@ -16,7 +16,6 @@ This packet lets a separate reviewer inspect the M1 candidates against `docs/tas
 
 - Task specification: `docs/task-spec.md`
 - Candidate registry: `suites/m1-repair-v0.candidates.jsonl`
-- M2 source-evidence generation script: `scripts/generate_m2_source_evidence.py`
 - M2 source evidence: `suites/m1-repair-v0.source-evidence.jsonl`
 - M2 workflow: `.github/workflows/m2-upstream-verification.yml`
 - M2 execution record: `docs/m2-verification-run.md`
