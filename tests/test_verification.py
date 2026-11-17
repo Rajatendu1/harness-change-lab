@@ -228,6 +228,21 @@ class ExecutionEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ManifestError, "test_patch"):
             parse_execution_evidence(bad)
 
+    def test_m3_run_record_distinguishes_raw_file_and_suite_hashes(self):
+        import hashlib
+        manifest = Path("proposals/m1-direct-parent-clean-path.research.jsonl")
+        raw_hash = hashlib.sha256(manifest.read_bytes()).hexdigest()
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(main(["validate-suite", str(CLEAN_SUITE)]), 0)
+        canonical_hash = json.loads(output.getvalue())["suite_sha256"]
+        document = Path("docs/m3-clean-direct-verification-run.md").read_text(encoding="utf-8")
+        self.assertIn("raw-byte SHA-256", document)
+        self.assertIn("canonical suite identity hash", document)
+        self.assertIn(raw_hash, document)
+        self.assertIn(canonical_hash, document)
+        self.assertNotEqual(raw_hash, canonical_hash)
+
     def test_m2_workflow_summary_label_matches_actual_runner(self):
         workflow = Path(".github/workflows/m2-upstream-verification.yml").read_text(encoding="utf-8")
         self.assertIn("runs-on: ubuntu-22.04", workflow)
