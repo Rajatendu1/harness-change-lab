@@ -175,7 +175,7 @@ jobs:
             echo '| Repository | `${{ matrix.repo }}` |'
             echo '| Base commit | `${{ matrix.base_commit }}` |'
             echo '| Fixed merge commit | `${{ matrix.fixed_commit }}` |'
-            echo '| Runner | `ubuntu-24.04` (standard public-repository runner) |'
+            echo '| Runner | `ubuntu-22.04` (standard public-repository runner) |'
             echo '| Job timeout | 20 minutes |'
             echo '| Benchmark data | Not downloaded or used |'
             echo '| Secrets/model credentials/cache/artifacts | None |'
