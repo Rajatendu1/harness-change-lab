@@ -6,7 +6,7 @@ M6 adds a validation contract for result records supplied by a future authorized
 
 ## Boundary
 
-- After the M7 owner acceptance, the clean direct-upstream package can produce a `ready_not_executed` manifest for the approved M7 runner configuration. No real result file exists yet.
+- After the M7 owner acceptance, the clean direct-upstream package produced a `ready_not_executed` manifest for the approved M7 runner configuration. The single authorized M7 batch has now run; its public result records and run record are in `proposals/m7-direct-upstream-verifier.results.jsonl` and `docs/m7-direct-upstream-verifier-run.md`.
 - Fixture results in tests only exercise the intake schema. They are not execution evidence and are not stored as project results.
 - A result row must match the manifest hash, runner identity, task revision, task hash, verifier hash and planned trial index.
 - A complete result set must cover every planned task/trial exactly once.
@@ -21,5 +21,7 @@ M6 adds a validation contract for result records supplied by a future authorized
 3. Extract the `M6_RESULT_JSON=` lines from that run's logs into a result JSONL file.
 4. Recompute and validate the M4 manifest from suite, source, execution and review evidence.
 5. Run `validate-run-results <manifest> <results>` to check result identity, completeness and policy boundaries.
+
+The completed M7 execution used this flow once. It produced 15 result records that validate as `results_contract_valid` against manifest `ede5692cac16280eeec703d62d1fed419ebb2c93c0220f221c3ce58349df4bc9`. That validation does not authenticate the external run and does not authorize another batch.
 
 A valid result summary means only that the supplied records match the contract. It does not prove the runner ran, does not authenticate its logs and does not change task acceptance.
