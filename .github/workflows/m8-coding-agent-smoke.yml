@@ -1,0 +1,274 @@
+name: M8 coding-agent smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m8-coding-agent-smoke
+  cancel-in-progress: false
+
+jobs:
+  prepare-agent-matrix:
+    name: Prepare bounded agent matrix
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      runner_config_sha256: ${{ steps.matrix.outputs.runner_config_sha256 }}
+    steps:
+      - name: Check out harness repository
+        uses: actions/checkout@v6
+      - name: Build one-trial agent matrix
+        id: matrix
+        run: |
+          set -euo pipefail
+          config_sha=$(sha256sum .github/workflows/m8-coding-agent-smoke.yml | awk '{print $1}')
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          research = [json.loads(line) for line in Path('proposals/m1-direct-parent-clean-path.research.jsonl').read_text(encoding='utf-8').splitlines() if line.strip()]
+          evidence = {row['id']: row for row in (json.loads(line) for line in Path('proposals/m1-direct-parent-clean-path.execution-evidence.jsonl').read_text(encoding='utf-8').splitlines() if line.strip())}
+          runtime = {
+              'm1-flask-dotted-blueprint': {'package': 'Flask', 'python_version': '3.9'},
+              'm1-requests-decode-unicode': {'package': 'requests', 'python_version': '3.7'},
+              'm1-xarray-unstack-single-dim': {'package': 'xarray', 'python_version': '3.7'},
+              'm1-click-hyphenated-help-wrap': {'package': 'click', 'python_version': '3.11'},
+              'm1-pytest-number-docstring': {'package': 'pytest', 'python_version': '3.11'},
+          }
+          include = []
+          for task in research:
+              task_id = task['id']
+              if task['status'] != 'accepted' or task['rights']['status'] != 'accepted':
+                  raise SystemExit(f'task is not accepted: {task_id}')
+              if task_id not in evidence or task_id not in runtime:
+                  raise SystemExit(f'missing evidence or runtime for {task_id}')
+              row = evidence[task_id]
+              if len(task['setup']) != 1 or len(task['verify']) != 1 or task['timeout_s'] != 900:
+                  raise SystemExit(f'task commands or timeout are outside the approved bound for {task_id}')
+              include.append({
+                  'id': task_id,
+                  'issue': task['issue'],
+                  'repo': task['source']['url'].removeprefix('https://github.com/').removesuffix('.git'),
+                  'package': runtime[task_id]['package'],
+                  'python_version': runtime[task_id]['python_version'],
+                  'base_commit': row['source']['base_commit'],
+                  'fixed_commit': row['source']['fixed_commit'],
+                  'test_path': row['test_patch']['applied_files'][0],
+                  'setup': task['setup'][0],
+                  'verify': task['verify'][0],
+              })
+          if len(include) != 5:
+              raise SystemExit(f'expected 5 agent jobs, got {len(include)}')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as stream:
+              stream.write('matrix=' + json.dumps({'include': include}, separators=(',', ':')) + '\n')
+              stream.write(f'runner_config_sha256={config_sha}\n')
+          PY
+
+  run-coding-agent:
+    name: ${{ matrix.id }}
+    needs: prepare-agent-matrix
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix: ${{ fromJson(needs.prepare-agent-matrix.outputs.matrix) }}
+    env:
+      REPO_URL: https://github.com/${{ matrix.repo }}.git
+      EXPECTED_RUNNER_CONFIG_SHA256: ${{ needs.prepare-agent-matrix.outputs.runner_config_sha256 }}
+      MODEL: groq/openai/gpt-oss-120b
+      PROVIDER: groq
+      AGENT_NAME: aider
+    steps:
+      - name: Check out harness repository
+        uses: actions/checkout@v6
+      - name: Recheck workflow identity and bounds
+        env:
+          MATRIX_TASK_ID: ${{ matrix.id }}
+          MATRIX_SETUP: ${{ matrix.setup }}
+          MATRIX_VERIFY: ${{ matrix.verify }}
+        run: |
+          set -euo pipefail
+          echo "JOB_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >>"$GITHUB_ENV"
+          test "$(sha256sum .github/workflows/m8-coding-agent-smoke.yml | awk '{print $1}')" = "$EXPECTED_RUNNER_CONFIG_SHA256"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          rows = [json.loads(line) for line in Path('proposals/m1-direct-parent-clean-path.research.jsonl').read_text(encoding='utf-8').splitlines() if line.strip()]
+          task = next(row for row in rows if row['id'] == os.environ['MATRIX_TASK_ID'])
+          checks = [
+              len(rows) == 5,
+              task['status'] == 'accepted',
+              task['rights']['status'] == 'accepted',
+              task['setup'] == [os.environ['MATRIX_SETUP']],
+              task['verify'] == [os.environ['MATRIX_VERIFY']],
+              task['timeout_s'] == 900,
+          ]
+          if not all(checks):
+              raise SystemExit('job matrix is outside the approved bound')
+          PY
+      - name: Set up historical Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Install Aider with the runner Python
+        run: |
+          set -euo pipefail
+          pipx install aider-chat
+          aider --version | tee /tmp/m8-aider-version.txt
+      - name: Create isolated base workspace
+        run: |
+          set -euo pipefail
+          git init upstream
+          cd upstream
+          git remote add origin "$REPO_URL"
+          git fetch --depth 1 origin '${{ matrix.base_commit }}'
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = '${{ matrix.base_commit }}'
+          git remote remove origin
+          git reflog expire --expire=now --all
+          git gc --prune=now
+          if git cat-file -e '${{ matrix.fixed_commit }}^{commit}' 2>/dev/null; then
+            echo 'Isolation failure: fixed commit is present before the agent run.' >&2
+            exit 1
+          fi
+      - name: Install base source
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          ${{ matrix.setup }}
+      - name: Run one bounded coding-agent message
+        working-directory: upstream
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ISSUE_STATEMENT: ${{ matrix.issue }}
+        run: |
+          set -u
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          issue = os.environ['ISSUE_STATEMENT'].strip()
+          prompt = f"""You are repairing this repository at its current checked-out commit.
+
+          Issue statement:
+          {issue}
+
+          Make the smallest source-code change that fixes the issue. Do not modify tests. Do not inspect git history, git remotes, external network sources, or hidden files outside this repository. Do not run shell commands. Edit the repository files directly, then stop."""
+          Path('/tmp/m8-prompt.txt').write_text(prompt, encoding='utf-8')
+          PY
+          start=$(date +%s)
+          set +e
+          timeout 900s aider \
+            --model "$MODEL" \
+            --message-file /tmp/m8-prompt.txt \
+            --yes-always \
+            --no-auto-commits \
+            --no-dirty-commits \
+            --no-suggest-shell-commands \
+            --no-auto-lint \
+            --no-auto-test \
+            >/tmp/m8-agent.log 2>&1
+          status=$?
+          set -e
+          end=$(date +%s)
+          {
+            echo "AGENT_STATUS=$status"
+            echo "AGENT_DURATION_S=$((end - start))"
+          } >>"$GITHUB_ENV"
+          if [ "$status" -ne 0 ]; then
+            echo "Aider exited with status $status; continuing to score any repository diff without publishing the model chat."
+          fi
+      - name: Capture agent diff and apply hidden verifier tests
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          git diff --binary >/tmp/m8-agent.patch
+          git diff --stat >/tmp/m8-agent.stat
+          git diff --name-only HEAD >/tmp/m8-agent-files.txt
+          git checkout -- '${{ matrix.test_path }}' || true
+          git remote add origin "$REPO_URL"
+          git fetch --depth 2 origin '${{ matrix.fixed_commit }}'
+          git diff --binary '${{ matrix.fixed_commit }}^' '${{ matrix.fixed_commit }}' -- '${{ matrix.test_path }}' >/tmp/m8-test.patch
+          test -s /tmp/m8-test.patch
+          git apply --check /tmp/m8-test.patch
+          git apply /tmp/m8-test.patch
+          git diff --check
+      - name: Score the agent workspace
+        working-directory: upstream
+        run: |
+          set -u
+          start=$(date +%s)
+          set +e
+          timeout 900s bash -lc '${{ matrix.verify }}' >/tmp/m8-verify.log 2>&1
+          status=$?
+          set -e
+          end=$(date +%s)
+          {
+            echo "VERIFY_STATUS=$status"
+            echo "VERIFY_DURATION_S=$((end - start))"
+          } >>"$GITHUB_ENV"
+          tail -40 /tmp/m8-verify.log
+      - name: Emit bounded result record
+        working-directory: upstream
+        env:
+          MATRIX_TASK_ID: ${{ matrix.id }}
+          MATRIX_BASE_COMMIT: ${{ matrix.base_commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          aider_version = Path('/tmp/m8-aider-version.txt').read_text(encoding='utf-8', errors='replace').strip()
+          agent_files = Path('/tmp/m8-agent-files.txt').read_text(encoding='utf-8', errors='replace').splitlines()
+          record = {
+              'schema': 'm8-agent-smoke-result-v0',
+              'task_id': os.environ['MATRIX_TASK_ID'],
+              'provider': os.environ['PROVIDER'],
+              'model': os.environ['MODEL'],
+              'base_commit': os.environ['MATRIX_BASE_COMMIT'],
+              'started_at': os.environ['JOB_STARTED_AT'],
+              'completed_at': subprocess.run(['date', '-u', '+%Y-%m-%dT%H:%M:%SZ'], text=True, capture_output=True, check=True).stdout.strip(),
+              'agent': {
+                  'name': os.environ['AGENT_NAME'],
+                  'version': aider_version,
+                  'exit_code': int(os.environ['AGENT_STATUS']),
+                  'duration_s': int(os.environ['AGENT_DURATION_S']),
+              },
+              'diff': {
+                  'files': agent_files,
+                  'stat': Path('/tmp/m8-agent.stat').read_text(encoding='utf-8', errors='replace').strip(),
+                  'empty': not Path('/tmp/m8-agent.patch').read_bytes(),
+              },
+              'verifier': {
+                  'exit_code': int(os.environ['VERIFY_STATUS']),
+                  'duration_s': int(os.environ['VERIFY_DURATION_S']),
+                  'passed': int(os.environ['VERIFY_STATUS']) == 0,
+              },
+              'policy': {
+                  'one_message': True,
+                  'one_trial': True,
+                  'automatic_retry': False,
+                  'benchmark_data_used': False,
+                  'artifact_upload_count': 0,
+                  'model_chat_published': False,
+                  'agent_saw_only_base_commit_and_issue_statement': True,
+                  'fixed_test_patch_hidden_until_after_agent_exit': True,
+              },
+          }
+          Path('/tmp/m8-result.json').write_text(json.dumps(record, sort_keys=True, separators=(',', ':')) + '\n', encoding='utf-8')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as stream:
+              stream.write('```json\n')
+              stream.write(json.dumps(record, indent=2, sort_keys=True))
+              stream.write('\n```\n')
+          PY
