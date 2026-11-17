@@ -4,7 +4,7 @@ Prepared on 17 November 2026. The corrected bounded workflow was later approved 
 
 ## What is now prepared without a new run
 
-`suites/m1-repair-v0.source-evidence.jsonl` records the original public GitHub issue, pull request, pinned base commit, fixed merge commit, changed test files, pinned license file hash and current SWE-bench Lite dataset metadata for each of the five candidates.
+`suites/m1-repair-v0.source-evidence.jsonl` records the original public GitHub issue, pull request, pinned base commit, fixed commit, actual base relation, changed test files, pinned license file hash and current SWE-bench Lite dataset metadata for each of the five candidates.
 
 `plan-verification` validates that evidence against the candidate registry and emits a deterministic base-fail/fixed-pass plan:
 
@@ -42,7 +42,7 @@ If approved, add and manually dispatch one new workflow with this exact scope:
 - `permissions: contents: read`; no secrets, model credentials, repository write scope, cache, artifact upload, package publication or paid resource.
 - Clone only the public repository named by each candidate.
 - Checkout the pinned base commit and run the listed verifier command; expected result: at least one fail-to-pass test fails.
-- Checkout the recorded fixed merge commit and run the same verifier command; expected result: all listed tests pass.
+- Checkout the recorded fixed commit and run the same verifier command; expected result: all listed tests pass.
 - Install only dependencies declared by that upstream repository, using public GitHub/PyPI access.
 - Write a job summary with task ID, commit SHAs, command exit codes, duration and dependency versions. Do not commit results automatically.
 - Any unexpected pass/fail result keeps the candidate at `candidate`; it does not get edited to match an expected story.
