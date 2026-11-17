@@ -216,10 +216,11 @@ class ExecutionEvidenceTests(unittest.TestCase):
             load_evidence(CLEAN_EVIDENCE),
             load_execution_evidence(CLEAN_EXECUTION),
         )
-        self.assertEqual(status["status"], "upstream_source_verified_not_accepted")
+        self.assertEqual(status["status"], "upstream_source_verified_accepted")
         self.assertEqual(status["task_count"], 5)
         self.assertEqual(status["upstream_source_verified_count"], 5)
-        self.assertEqual(status["accepted_count"], 0)
+        self.assertEqual(status["accepted_count"], 5)
+        self.assertEqual(status["rights_pending_count"], 0)
         self.assertEqual(status["model_or_agent_runs"], 0)
         rows = {row["id"]: row for row in status["tasks"]}
         self.assertEqual(rows["m1-click-hyphenated-help-wrap"]["base_relation"], "direct-parent")
@@ -237,14 +238,11 @@ class ExecutionEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(status["engineering_review_status"], "recorded_read_only_not_acceptance")
         self.assertEqual(status["engineering_review_recorded_count"], 5)
-        self.assertEqual(status["accepted_count"], 0)
-        self.assertEqual(status["rights_pending_count"], 5)
+        self.assertEqual(status["accepted_count"], 5)
+        self.assertEqual(status["rights_pending_count"], 0)
         self.assertTrue(all(row["engineering_review_recorded"] for row in status["tasks"]))
-        self.assertTrue(all("independent engineering review not recorded" not in row["blockers"] for row in status["tasks"]))
-        self.assertTrue(all("task acceptance decision pending" in row["blockers"] for row in status["tasks"]))
-        self.assertIn("record owner task-acceptance decisions", status["remaining_acceptance_work"][1])
-        self.assertEqual(status["remaining_acceptance_work"][0], "accept repository rights for the intended evaluation use")
-        self.assertTrue(all(row["blockers"][0] == "repository rights review pending" for row in status["tasks"]))
+        self.assertTrue(all(not row["blockers"] for row in status["tasks"]))
+        self.assertEqual(status["remaining_acceptance_work"], ["obtain separate authority before any coding-agent, model or benchmark-data run"])
 
     def test_review_record_cannot_claim_acceptance(self):
         bad = review_dict(acceptance_decision="accepted")
@@ -284,20 +282,17 @@ class ExecutionEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ManifestError, "test_patch"):
             parse_execution_evidence(bad)
 
-    def test_m3_run_record_distinguishes_raw_file_and_suite_hashes(self):
-        import hashlib
-        manifest = Path("proposals/m1-direct-parent-clean-path.research.jsonl")
-        raw_hash = hashlib.sha256(manifest.read_bytes()).hexdigest()
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            self.assertEqual(main(["validate-suite", str(CLEAN_SUITE)]), 0)
-        canonical_hash = json.loads(output.getvalue())["suite_sha256"]
+    def test_m3_run_record_preserves_historical_hashes(self):
         document = Path("docs/m3-clean-direct-verification-run.md").read_text(encoding="utf-8")
         self.assertIn("raw-byte SHA-256", document)
         self.assertIn("canonical suite identity hash", document)
-        self.assertIn(raw_hash, document)
-        self.assertIn(canonical_hash, document)
-        self.assertNotEqual(raw_hash, canonical_hash)
+        self.assertIn("0004c108e34b55adc2ae8a4097e40b7d927e2cb18a9a060c1f6532bfb8ca9559", document)
+        self.assertIn("8620bb20b3530dfa2d65b7f47de60f569ab436cd7c6dd323b9118ed4300b492a", document)
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(main(["validate-suite", str(CLEAN_SUITE)]), 0)
+        current_hash = json.loads(output.getvalue())["suite_sha256"]
+        self.assertNotEqual(current_hash, "8620bb20b3530dfa2d65b7f47de60f569ab436cd7c6dd323b9118ed4300b492a")
 
     def test_m2_workflow_summary_label_matches_actual_runner(self):
         workflow = Path(".github/workflows/m2-upstream-verification.yml").read_text(encoding="utf-8")
