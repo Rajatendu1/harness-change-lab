@@ -54,19 +54,33 @@ The proposed value is a reproducible small-team workflow with a pinned repair
 suite, protected verifiers, paired uncertainty reports and an understandable
 regression policy. No novelty, adoption or production claim is made.
 
+## Verified container-route pilot
+
+On 17 November 2026, the manually dispatched fixed-code isolation smoke passed on
+GitHub's standard Ubuntu 24.04 runner. The job took 18 seconds (24 seconds total
+workflow duration). [Read the run and logs](https://github.com/Rajatendu1/harness-change-lab/actions/runs/44047033684).
+
+The probes confirmed UID 65534, a read-only root, no new privileges, no Linux
+capabilities, blocked external network access and no Docker socket. The controller
+checked no bind mounts, devices or privileged mode, enforced 256 MiB RAM, 1 CPU
+and 64 PIDs, and removed the container. No build artifacts or caches were uploaded.
+The manual workflow has a 10-minute timeout and read-only repository permissions.
+
+This is **fixed-code container smoke evidence only**, not an agent benchmark,
+model-quality result, completed repair suite or hardened multi-tenant sandbox.
+The source code is published under MIT with owner approval.
+
 ## Not yet verified
 
-- No real-model call, coding-agent run, container execution or benchmark result.
-- No live deployment, published package, container result or real-agent run.
-- Repository publication and a bounded manual isolation test are approved; actual
-  CI execution is reported separately from this source state.
-- No verified free inference credentials, account quota or always-on hosting.
+- No real-model call, coding-agent run or benchmark result.
+- No published package or always-on service.
+- No verified free inference credentials or account quota.
 - No finished five-task historical-repair suite or benchmark-data rights review.
 - No statistical coverage/power calibration or independent validation.
 
-The current development environment has no Docker daemon and around 2 GB RAM.
-The container smoke script exits without a fallback in this environment. An
-isolated, explicitly approved execution route is needed before a container run.
+The local development environment has no Docker daemon and around 2 GB RAM.
+The local missing-Docker refusal and the successful remote pilot are separate
+checks. The first build milestone remains incomplete.
 
 ## Optional integration check
 
@@ -87,9 +101,9 @@ python scripts/container_smoke.py
 It uses fixed test code, not an agent or downloaded target. It requires an
 existing Docker engine, at least 8 GiB free disk and a pinned public Python image.
 It sets no network, no host mounts, a read-only root filesystem, no capabilities,
-no new privileges, a non-root user and resource limits. This script has only been
-syntax-checked and its missing-Docker refusal tested locally. Its runtime checks
-have not yet passed on an actual container host.
+no new privileges, a non-root user and resource limits. The local refusal path and the remote fixed-code runtime checks have both been
+exercised. The linked pilot is the evidence for the remote checks, not for an
+agent run.
 
 ## Authorship and license
 
