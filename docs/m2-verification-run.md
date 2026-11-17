@@ -25,7 +25,7 @@ The corrected M2 workflow was executed once as GitHub Actions run [#2](https://g
 | `m1-pylint-punctuation-notes` | 3.10.22 | exit 1, 1 failed | exit 0, 1 passed | 24s |
 | `m1-pytest-number-docstring` | 3.11.18 | exit 1, 1 failed | exit 0, 1 passed | 25s |
 
-Each job cloned only the pinned public upstream repository, extracted only the recorded test files from the fixed-commit `.diff` URL, applied that test patch to the recorded base, verified that the patched base failed with ordinary pytest exit code 1, reset to the fixed commit, and verified that the same tests passed with exit code 0.
+Each job cloned only the pinned public upstream repository, computed the actual patch locally with `git diff --binary <fixed>^ <fixed> -- <matrix.test_path>`, applied only that one matrix test-path patch to the recorded base, verified that the patched base failed with ordinary pytest exit code 1, reset to the fixed commit, and verified that the same tests passed with exit code 0. The `.diff` URLs below are public review locators for the full fixed-commit diffs, not the exact applied patch identity. The exact applied files and command identities are now recorded in `suites/m1-repair-v0.execution-evidence.jsonl`.
 
 Machine-readable execution evidence is `suites/m1-repair-v0.execution-evidence.jsonl`. Summarize it with:
 
@@ -54,7 +54,9 @@ For Flask, Requests and Pylint, the selected base is the fixed commit's first pa
 
 The M2 observations still support the narrow execution claim for all five: the fixed-diff test patch fails on the recorded base and the same tests pass at the fixed commit. They do not prove that the 7 or 18 intermediate upstream commits are irrelevant. Keep `m1-xarray-unstack-single-dim` and `m1-pytest-number-docstring` evidence-qualified until the owner explicitly permits ancestor bases and review records why the fixed-diff regression tests isolate the claimed fix. No silent direct-parent acceptance applies to those two.
 
-## Fixed-commit test patch URLs
+## Fixed-commit diff URLs and applied scope
+
+These URLs are review locators for the full upstream fixed-commit diffs. The hash-pinned workflow did not download them; it computed a local first-parent diff and filtered it to one matrix `test_path` per task. For Flask, upstream changed both `tests/test_basic.py` and `tests/test_blueprints.py`, and the source evidence records both; the M2 run applied only `tests/test_blueprints.py`, which contains the two fail-to-pass tests.
 
 - Flask: https://github.com/pallets/flask/commit/08e459e823235eecd86c635653f4bd6d6003c2b3.diff
 - Requests: https://github.com/psf/requests/commit/92fe51c0afd9239388d2c8bb17dc46babdf7881f.diff
@@ -62,7 +64,7 @@ The M2 observations still support the narrow execution claim for all five: the f
 - Pylint: https://github.com/pylint-dev/pylint/commit/a1df7685a4e6a05b519ea011f16a2f0d49d08032.diff
 - pytest: https://github.com/pytest-dev/pytest/commit/084d756ae6a03bba7a257ebae3c83095b228988f.diff
 
-The workflow filters each fixed-commit diff to the `test_files` recorded in `suites/m1-repair-v0.source-evidence.jsonl`; implementation files are recorded separately and are not applied to the base.
+The workflow filters each fixed-commit diff to the single `test_path` recorded in `suites/m1-repair-v0.execution-evidence.jsonl`; implementation files are recorded separately and are not applied to the base. Source-evidence `test_files` remains the complete list of upstream fixed-commit test-file changes.
 
 ## Runner-summary caveat
 
