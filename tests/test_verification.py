@@ -87,6 +87,12 @@ def execution_dict(task_id="m1-example-task", source_ref="a" * 40, fixed_ref="b"
         "base": {"exit_code": 1, "duration_s": 1, "failed_count": 1},
         "fixed": {"exit_code": 0, "duration_s": 1, "passed_count": 1},
         "source": {"base_commit": source_ref, "fixed_commit": fixed_ref},
+        "test_patch": {
+            "identity": f"git diff --binary {fixed_ref}^ {fixed_ref} -- tests/test_example.py",
+            "source_url": "https://github.com/example/project/commit/" + fixed_ref + ".diff",
+            "applied_files": ["tests/test_example.py"],
+            "scope": "M2 applied only this matrix test_path; source-evidence test_files lists all upstream fixed-commit test-file changes.",
+        },
     }
     item.update(overrides)
     return item
@@ -169,6 +175,9 @@ class ExecutionEvidenceTests(unittest.TestCase):
         self.assertTrue(all(row["base_exit_code"] == 1 for row in status["tasks"]))
         self.assertTrue(all(row["fixed_exit_code"] == 0 for row in status["tasks"]))
         self.assertTrue(all("independent task-spec review" in row["blockers"][-1] for row in status["tasks"]))
+        execution = {row["id"]: row for row in status["execution"]}
+        self.assertEqual(execution["m1-flask-dotted-blueprint"]["test_patch_applied_files"], ["tests/test_blueprints.py"])
+        self.assertIn("git diff --binary", execution["m1-flask-dotted-blueprint"]["test_patch_identity"])
         ancestor_rows = {row["id"] for row in status["tasks"] if row["base_relation"] == "ancestor"}
         self.assertEqual(ancestor_rows, {"m1-xarray-unstack-single-dim", "m1-pytest-number-docstring"})
         self.assertIn("ancestor-base evidence qualification", status["remaining_acceptance_work"][0])
@@ -184,6 +193,12 @@ class ExecutionEvidenceTests(unittest.TestCase):
         bad = execution_dict()
         bad["base"]["exit_code"] = 2
         with self.assertRaisesRegex(ManifestError, "ordinary pytest failure"):
+            parse_execution_evidence(bad)
+
+    def test_execution_requires_test_patch_identity(self):
+        bad = execution_dict()
+        del bad["test_patch"]
+        with self.assertRaisesRegex(ManifestError, "test_patch"):
             parse_execution_evidence(bad)
 
     def test_m2_workflow_summary_label_matches_actual_runner(self):
