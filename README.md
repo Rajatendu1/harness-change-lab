@@ -81,31 +81,33 @@ external code:
 python -m harnesslab.cli validate-suite suites/m1-repair-v0.candidates.jsonl
 ```
 
-This is candidate-registry progress only. It has 5 candidates, 0 accepted
-tasks and 0 benchmark results; rights review and base-fail/fixed-pass execution
-validation are still open.
+This is candidate-registry progress only. It has 5 candidates and 0 accepted
+tasks. The M2 run now provides base-fail/fixed-pass evidence for all five
+upstream source pairs, but rights review and independent task-spec review are
+still open.
 
-Original-source metadata for those candidates is now recorded in
-`suites/m1-repair-v0.source-evidence.jsonl`. A deterministic, unexecuted M2
-verification plan can be checked without running upstream code:
+Original-source metadata for those candidates is recorded in
+`suites/m1-repair-v0.source-evidence.jsonl`. The completed M2 execution
+evidence is recorded in `suites/m1-repair-v0.execution-evidence.jsonl` and
+`docs/m2-verification-run.md`. Summarize verified evidence and remaining
+acceptance blockers without running upstream code:
 
 ```sh
-python -m harnesslab.cli plan-verification \
+python -m harnesslab.cli acceptance-status \
   suites/m1-repair-v0.candidates.jsonl \
-  suites/m1-repair-v0.source-evidence.jsonl
+  suites/m1-repair-v0.source-evidence.jsonl \
+  suites/m1-repair-v0.execution-evidence.jsonl
 ```
 
-The plan is `prepared_not_approved`. The completed Docker pilot was fixed-code
-smoke evidence only; fresh approval is still required before cloning upstream
-repositories, installing their dependencies or running their tests on a free
-runner. Model access is not needed for this M2 candidate-verification step.
+The current status is `upstream_source_verified_not_accepted`. Model access was
+not used for M2 and remains outside the verified scope.
 
 ## Not yet verified
 
 - No real-model call, coding-agent run or benchmark result.
 - No published package or always-on service.
 - No verified free inference credentials or account quota.
-- No finished five-task historical-repair suite or benchmark-data rights review.
+- No accepted five-task historical-repair suite or benchmark-data rights review.
 - No statistical coverage/power calibration or independent validation.
 
 The local development environment has no Docker daemon and around 2 GB RAM.
