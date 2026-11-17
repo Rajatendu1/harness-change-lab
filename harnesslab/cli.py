@@ -12,6 +12,7 @@ from .verification import (
     build_verification_plan,
     load_evidence,
     load_execution_evidence,
+    load_review_evidence,
 )
 
 
@@ -49,10 +50,12 @@ def main(argv=None) -> int:
     acceptance.add_argument("suite")
     acceptance.add_argument("evidence")
     acceptance.add_argument("execution")
+    acceptance.add_argument("review", nargs="?")
     prepare = sub.add_parser("prepare-run-manifest", help="Prepare a non-executing runner manifest contract")
     prepare.add_argument("suite")
     prepare.add_argument("evidence")
     prepare.add_argument("execution")
+    prepare.add_argument("review", nargs="?")
     prepare.add_argument("--runner-name", required=True)
     prepare.add_argument("--runner-version", required=True)
     prepare.add_argument("--runner-config-sha256", required=True)
@@ -63,6 +66,7 @@ def main(argv=None) -> int:
     validate_run.add_argument("suite")
     validate_run.add_argument("evidence")
     validate_run.add_argument("execution")
+    validate_run.add_argument("review", nargs="?")
     args = parser.parse_args(argv)
     if args.command == "prepare-run-manifest":
         try:
@@ -70,6 +74,7 @@ def main(argv=None) -> int:
                 load_suite(args.suite),
                 load_evidence(args.evidence),
                 load_execution_evidence(args.execution),
+                load_review_evidence(args.review) if args.review else None,
                 runner_name=args.runner_name,
                 runner_version=args.runner_version,
                 runner_config_sha256=args.runner_config_sha256,
@@ -89,6 +94,7 @@ def main(argv=None) -> int:
                 load_suite(args.suite),
                 load_evidence(args.evidence),
                 load_execution_evidence(args.execution),
+                load_review_evidence(args.review) if args.review else None,
             )
         except (ManifestError, OSError, json.JSONDecodeError) as exc:
             parser.exit(2, f"Invalid run manifest: {exc}\n")
@@ -100,6 +106,7 @@ def main(argv=None) -> int:
                 load_suite(args.suite),
                 load_evidence(args.evidence),
                 load_execution_evidence(args.execution),
+                load_review_evidence(args.review) if args.review else None,
             )
         except (ManifestError, OSError) as exc:
             parser.exit(2, f"Invalid acceptance status: {exc}\n")
