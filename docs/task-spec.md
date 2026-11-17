@@ -31,5 +31,6 @@ Rules:
 - Verifiable only: the verifier must pass/fail deterministically, no LLM-judge in M1.
 - Public repos only, pinned to a commit sha.
 - The base verifier must FAIL on the untouched repo and PASS after a correct fix (validated before the task enters the suite).
-- `candidate` tasks are not accepted benchmark tasks. An `accepted` task also needs an accepted rights review and recorded base-fail/fixed-pass execution evidence.
+- The selected base should be the fixed commit's first parent. If it is an earlier ancestor, record the actual first parent and commit gap, keep the task evidence-qualified, and do not accept it until the owner explicitly permits ancestor bases and review records why the fixed-diff regression tests isolate the claimed fix.
+- `candidate` tasks are not accepted benchmark tasks. An `accepted` task also needs an accepted rights review, reconciled independent review and recorded base-fail/fixed-pass execution evidence.
 - Provenance must identify the benchmark or issue source and preserve the exact fail-to-pass test identity used by the verifier.
