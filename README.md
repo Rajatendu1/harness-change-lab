@@ -164,6 +164,16 @@ commands, verifier identity, provenance, runner identity, trial plan, review
 scope or approval state. This is usable fail-closed harness behavior, not an
 Inspect or promptfoo adapter claim.
 
+## M6 result-intake validation
+
+`validate-run-results` checks supplied `m6-run-result-v0` JSONL records against
+a ready M4 manifest. It requires one complete record per planned task/trial,
+matching runner/task/verifier identity, ordinary base failure and fixed pass,
+and no model access, benchmark data, secrets, artifact uploads or retries. It
+rejects results for a blocked manifest. The command validates records only; it
+does not execute, replay or authenticate a runner. See
+`docs/m6-run-result-intake.md`. The clean package has no real result file.
+
 ## Not yet verified
 
 - No real-model call, coding-agent run or benchmark result.
