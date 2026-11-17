@@ -2,6 +2,7 @@ import contextlib
 import io
 import json
 from pathlib import Path
+import re
 import tempfile
 import unittest
 
@@ -305,6 +306,32 @@ class ExecutionEvidenceTests(unittest.TestCase):
         self.assertNotIn("Runner | `ubuntu-24.04`", workflow)
         self.assertIn("Fixed commit |", workflow)
         self.assertNotIn("Fixed merge commit |", workflow)
+
+
+class PublicPrivacyTests(unittest.TestCase):
+    def test_public_files_do_not_include_private_channel_identifiers(self):
+        message_prefixes = "|".join((
+            "phone" + "msg",
+            "imsg" + "msg",
+            "wa" + "react",
+            "phone" + "react",
+        ))
+        patterns = (
+            re.compile("wa" + r"mid\."),
+            re.compile(r"\b(?:" + message_prefixes + r")-[0-9A-Z]{20,}\b"),
+            re.compile(r"\+[0-9]{10,15}\b"),
+        )
+        offenders = []
+        for path in Path(".").rglob("*"):
+            if not path.is_file() or ".git" in path.parts or "__pycache__" in path.parts:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            if any(pattern.search(text) for pattern in patterns):
+                offenders.append(str(path))
+        self.assertEqual(offenders, [])
 
 
 class VerificationCliTests(unittest.TestCase):
