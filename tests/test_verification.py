@@ -31,12 +31,20 @@ def evidence_dict(task_id="m1-example-task", source_ref="a" * 40, **overrides):
         "source": {
             "repo": "example/project",
             "base_commit": source_ref,
-            "fixed_merge_commit": "b" * 40,
+            "fixed_commit": "b" * 40,
+            "fixed_first_parent": source_ref,
+            "base_relation": "direct-parent",
+            "ancestor_gap_commits": 0,
+            "fixed_commit_kind": "single-parent",
             "issue_url": "https://github.com/example/project/issues/1",
             "issue_title": "Fix the documented example edge case",
             "pr_url": "https://github.com/example/project/pull/2",
             "pr_title": "Fix the documented example edge case",
             "test_files": ["tests/test_example.py"],
+            "implementation_files": ["src/example.py"],
+            "test_patch_url": "https://github.com/example/project/commit/" + "b" * 40 + ".diff",
+            "test_patch_scope": "filter the fixed-commit diff to test_files",
+            "evidence_qualification": "Fixed first parent matches the selected base commit.",
         },
         "license": {
             "spdx_id": "MIT",
@@ -78,7 +86,7 @@ def execution_dict(task_id="m1-example-task", source_ref="a" * 40, fixed_ref="b"
         },
         "base": {"exit_code": 1, "duration_s": 1, "failed_count": 1},
         "fixed": {"exit_code": 0, "duration_s": 1, "passed_count": 1},
-        "source": {"base_commit": source_ref, "fixed_merge_commit": fixed_ref},
+        "source": {"base_commit": source_ref, "fixed_commit": fixed_ref},
     }
     item.update(overrides)
     return item
@@ -96,6 +104,14 @@ class SourceEvidenceTests(unittest.TestCase):
         self.assertEqual(first["upstream_code_execution"], "not_run")
         self.assertEqual(first["task_count"], 5)
         self.assertEqual(len(first["plan_sha256"]), 64)
+        rows = {item["id"]: item for item in first["tasks"]}
+        for row in rows.values():
+            source = row["source"]
+            self.assertTrue(source["test_patch_url"].endswith(".diff"))
+            self.assertIn(source["fixed_commit"], source["test_patch_url"])
+            self.assertTrue(source["implementation_files"])
+        self.assertEqual(rows["m1-xarray-unstack-single-dim"]["source"]["ancestor_gap_commits"], 7)
+        self.assertEqual(rows["m1-pytest-number-docstring"]["source"]["ancestor_gap_commits"], 18)
 
     def test_mismatched_source_fails_closed(self):
         task = next(iter(load_suite(SUITE)))
@@ -108,10 +124,30 @@ class SourceEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ManifestError, "missing source evidence"):
             build_verification_plan([task], [])
 
-    def test_evidence_requires_fixed_merge_commit(self):
+    def test_evidence_requires_fixed_commit(self):
         bad = evidence_dict()
-        bad["source"]["fixed_merge_commit"] = "main"
-        with self.assertRaisesRegex(ManifestError, "fixed_merge_commit"):
+        bad["source"]["fixed_commit"] = "main"
+        with self.assertRaisesRegex(ManifestError, "fixed_commit"):
+            parse_evidence(bad)
+
+    def test_evidence_requires_test_patch_url(self):
+        bad = evidence_dict()
+        del bad["source"]["test_patch_url"]
+        with self.assertRaisesRegex(ManifestError, "test_patch_url"):
+            parse_evidence(bad)
+
+    def test_direct_parent_mismatch_fails_closed(self):
+        bad = evidence_dict(source_ref="0" * 40)
+        bad["source"]["fixed_first_parent"] = "1" * 40
+        with self.assertRaisesRegex(ManifestError, "direct-parent evidence"):
+            parse_evidence(bad)
+
+    def test_ancestor_requires_positive_gap(self):
+        bad = evidence_dict(source_ref="0" * 40)
+        bad["source"]["base_relation"] = "ancestor"
+        bad["source"]["fixed_first_parent"] = "1" * 40
+        bad["source"]["ancestor_gap_commits"] = 0
+        with self.assertRaisesRegex(ManifestError, "ancestor evidence"):
             parse_evidence(bad)
 
 
@@ -129,15 +165,18 @@ class ExecutionEvidenceTests(unittest.TestCase):
         self.assertEqual(status["rights_pending_count"], 5)
         self.assertEqual(status["model_or_agent_runs"], 0)
         self.assertFalse(status["benchmark_data_used"])
-        self.assertIn("accept repository and benchmark-data rights", status["remaining_acceptance_work"][0])
+        self.assertTrue(any("accept repository and benchmark-data rights" in item for item in status["remaining_acceptance_work"]))
         self.assertTrue(all(row["base_exit_code"] == 1 for row in status["tasks"]))
         self.assertTrue(all(row["fixed_exit_code"] == 0 for row in status["tasks"]))
         self.assertTrue(all("independent task-spec review" in row["blockers"][-1] for row in status["tasks"]))
+        ancestor_rows = {row["id"] for row in status["tasks"] if row["base_relation"] == "ancestor"}
+        self.assertEqual(ancestor_rows, {"m1-xarray-unstack-single-dim", "m1-pytest-number-docstring"})
+        self.assertIn("ancestor-base evidence qualification", status["remaining_acceptance_work"][0])
 
     def test_execution_source_mismatch_fails_closed(self):
         task = next(iter(load_suite(SUITE)))
         evidence = parse_evidence(evidence_dict(task.id, task.source_ref))
-        execution = parse_execution_evidence(execution_dict(task.id, "0" * 40, evidence.fixed_merge_commit))
+        execution = parse_execution_evidence(execution_dict(task.id, "0" * 40, evidence.fixed_commit))
         with self.assertRaisesRegex(ManifestError, "base commit does not match"):
             build_acceptance_status([task], [evidence], [execution])
 
@@ -152,6 +191,8 @@ class ExecutionEvidenceTests(unittest.TestCase):
         self.assertIn("runs-on: ubuntu-22.04", workflow)
         self.assertIn("Runner | `ubuntu-22.04`", workflow)
         self.assertNotIn("Runner | `ubuntu-24.04`", workflow)
+        self.assertIn("Fixed commit |", workflow)
+        self.assertNotIn("Fixed merge commit |", workflow)
 
 
 class VerificationCliTests(unittest.TestCase):
