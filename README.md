@@ -18,6 +18,11 @@ Work-in-progress foundation, not a released agent runner. The earlier working na
 - An optional Inspect 0.3.290 integration check writes and reads a real Inspect log
   using fixed mock responses. This is synthetic plumbing evidence, not model
   quality or sandbox evidence.
+- A deterministic M4 manifest contract prepares and validates a future external
+  runner package without starting it. Candidate, rights-pending or otherwise
+  blocked suites produce `blocked_not_runnable` with exact blockers; task,
+  verifier, provenance, runner and trial-plan hashes are recomputed during
+  validation.
 
 ```sh
 python -m unittest discover -s tests -v
@@ -126,6 +131,31 @@ python -m harnesslab.cli acceptance-status \
 See `docs/m3-clean-direct-verification-run.md` for the one-shot M3 run record.
 This package is candidate evidence only; it is not an adopted suite, model
 result, coding-agent benchmark or completed harness milestone.
+
+## M4 runner-manifest contract
+
+`prepare-run-manifest` converts a task suite, source evidence and execution
+evidence into a deterministic future-runner contract. It records runner name,
+version and configuration hash, task/verifier/provenance hashes, trial count,
+concurrency, timeout budget, execution policy and approval gates. It does not
+start a runner or call a model.
+
+```sh
+python -m harnesslab.cli prepare-run-manifest \
+  proposals/m1-direct-parent-clean-path.research.jsonl \
+  proposals/m1-direct-parent-clean-path.source-evidence.jsonl \
+  proposals/m1-direct-parent-clean-path.execution-evidence.jsonl \
+  --runner-name fixture-runner \
+  --runner-version 0.1.0 \
+  --runner-config-sha256 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+```
+
+The current clean-path package exits with code 3 and status
+`blocked_not_runnable` because all five tasks remain candidates with rights and
+independent review unresolved. `validate-run-manifest` recomputes the contract
+from the same suite and evidence, and rejects altered task commands, verifier
+identity, provenance, runner identity, trial plan or approval state. This is
+usable fail-closed harness behavior, not an Inspect or promptfoo adapter claim.
 
 ## Not yet verified
 
