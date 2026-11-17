@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .compare import Outcome, compare
 from .run_manifest import build_run_manifest, validate_run_manifest
+from .run_results import load_run_results, validate_run_results
 from .tasks import ManifestError, load_suite, suite_summary
 from .verification import (
     build_acceptance_status,
@@ -67,6 +68,9 @@ def main(argv=None) -> int:
     validate_run.add_argument("evidence")
     validate_run.add_argument("execution")
     validate_run.add_argument("review", nargs="?")
+    results = sub.add_parser("validate-run-results", help="Validate supplied runner results without executing them")
+    results.add_argument("manifest")
+    results.add_argument("results")
     args = parser.parse_args(argv)
     if args.command == "prepare-run-manifest":
         try:
@@ -99,6 +103,15 @@ def main(argv=None) -> int:
         except (ManifestError, OSError, json.JSONDecodeError) as exc:
             parser.exit(2, f"Invalid run manifest: {exc}\n")
         print(json.dumps({"schema": "m4-run-manifest-validation-v0", "status": "contract-valid", "manifest_sha256": manifest["manifest_sha256"]}, sort_keys=True, indent=2))
+        return 0
+    if args.command == "validate-run-results":
+        try:
+            with Path(args.manifest).open(encoding="utf-8") as stream:
+                manifest = json.load(stream)
+            summary = validate_run_results(manifest, load_run_results(args.results))
+        except (ManifestError, OSError, json.JSONDecodeError) as exc:
+            parser.exit(2, f"Invalid run results: {exc}\n")
+        print(json.dumps(summary, sort_keys=True, indent=2))
         return 0
     if args.command == "acceptance-status":
         try:
