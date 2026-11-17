@@ -10,7 +10,7 @@ effectiveness, benchmark adoption, or production readiness.
 - Workflow: `.github/workflows/m8-coding-agent-smoke.yml`
 - Run: <https://github.com/Rajatendu1/harness-change-lab/actions/runs/44092986637>
 - Run outcome: success in 2 minutes 17 seconds
-- Commit under test: `6bac63fa98a6a6783089b05ee564fb57e0115a63`
+- Commit under test: `bff560754ae9b90ab7250cb6284366a05b6c0a17` (rewritten equivalent; the Actions run page preserves the original run reference)
 - Workflow SHA-256: `7a83245ee2c44a65dbb7677c50c442d6e945e0c0d4180649257d329435efbd1b`
 - Agent: Aider 0.86.2
 - Model route: `groq/openai/gpt-oss-120b`
