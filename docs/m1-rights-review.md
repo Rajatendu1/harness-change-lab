@@ -30,4 +30,4 @@ A candidate can become accepted only when both are true:
 1. Its repository and issue/test source terms are accepted for the intended local evaluation use, including any decision about GPL-licensed Pylint source and the undeclared SWE-bench Lite dataset metadata.
 2. Its base-fail/fixed-pass verifier behavior is executed and recorded in a separately approved isolated runner.
 
-No candidate is accepted yet. The prepared M2 run in `docs/m2-verification-proposal.md` has not been approved or executed.
+No candidate is accepted yet. The M2 run in `docs/m2-verification-run.md` completed the base-fail/fixed-pass execution condition for all five candidates, but the rights condition above remains unresolved and independent task-spec review is not recorded.
