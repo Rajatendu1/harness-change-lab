@@ -8,7 +8,7 @@ import unittest
 from harnesslab.cli import main
 from harnesslab.run_manifest import build_run_manifest, validate_run_manifest
 from harnesslab.tasks import ManifestError, load_suite
-from harnesslab.verification import load_evidence, load_execution_evidence
+from harnesslab.verification import load_evidence, load_execution_evidence, load_review_evidence
 
 from test_verification import evidence_dict, execution_dict
 from test_tasks import task_dict
@@ -19,6 +19,7 @@ from harnesslab.verification import parse_evidence, parse_execution_evidence
 CLEAN_SUITE = Path("proposals/m1-direct-parent-clean-path.research.jsonl")
 CLEAN_EVIDENCE = Path("proposals/m1-direct-parent-clean-path.source-evidence.jsonl")
 CLEAN_EXECUTION = Path("proposals/m1-direct-parent-clean-path.execution-evidence.jsonl")
+CLEAN_REVIEW = Path("proposals/m3-m4-independent-review.evidence.jsonl")
 RUNNER_CONFIG = "0" * 64
 
 
@@ -44,6 +45,7 @@ class RunManifestTests(unittest.TestCase):
             load_suite(CLEAN_SUITE),
             load_evidence(CLEAN_EVIDENCE),
             load_execution_evidence(CLEAN_EXECUTION),
+            load_review_evidence(CLEAN_REVIEW),
             runner_name="fixture-runner",
             runner_version="0.1.0",
             runner_config_sha256=RUNNER_CONFIG,
@@ -54,10 +56,16 @@ class RunManifestTests(unittest.TestCase):
         self.assertEqual(manifest["status"], "blocked_not_runnable")
         self.assertEqual(manifest["suite"]["task_count"], 5)
         self.assertEqual(manifest["suite"]["accepted_count"], 0)
+        self.assertEqual(manifest["suite"]["engineering_review_status"], "recorded_read_only_not_acceptance")
+        self.assertEqual(manifest["suite"]["engineering_review_recorded_count"], 5)
         self.assertEqual(manifest["trial_plan"]["total_trials"], 15)
         self.assertFalse(manifest["execution_policy"]["benchmark_data_use"])
         self.assertEqual(manifest["execution_policy"]["model_access"], "not_authorized_by_this_manifest")
         self.assertTrue(manifest["blocked_reasons"])
+        self.assertFalse(any("independent engineering review not recorded" in item for item in manifest["blocked_reasons"]))
+        self.assertTrue(any("task acceptance decision pending" in item for item in manifest["blocked_reasons"]))
+        self.assertTrue(any("repository rights review pending" in item for item in manifest["blocked_reasons"]))
+        self.assertFalse(any("benchmark-data rights review pending" in item for item in manifest["blocked_reasons"]))
         for row in manifest["tasks"]:
             self.assertEqual(len(row["task_sha256"]), 64)
             self.assertEqual(len(row["verifier_sha256"]), 64)
@@ -114,6 +122,7 @@ class RunManifestCliTests(unittest.TestCase):
                 str(CLEAN_SUITE),
                 str(CLEAN_EVIDENCE),
                 str(CLEAN_EXECUTION),
+                str(CLEAN_REVIEW),
                 "--runner-name", "fixture-runner",
                 "--runner-version", "0.1.0",
                 "--runner-config-sha256", RUNNER_CONFIG,
@@ -132,6 +141,7 @@ class RunManifestCliTests(unittest.TestCase):
                     str(CLEAN_SUITE),
                     str(CLEAN_EVIDENCE),
                     str(CLEAN_EXECUTION),
+                    str(CLEAN_REVIEW),
                 ]), 0)
             self.assertEqual(json.loads(valid.getvalue())["status"], "contract-valid")
 
