@@ -144,14 +144,37 @@ def _provenance(mapping: dict[str, Any]) -> dict[str, Any]:
     value = mapping.get("provenance")
     if not isinstance(value, dict) or not value:
         raise ManifestError("provenance must be a non-empty object")
-    for key in ("benchmark", "instance_id", "dataset_url"):
-        _text(value, key, min_length=3)
-    commit = value.get("environment_setup_commit")
-    if commit is not None and (not isinstance(commit, str) or not _SHA.match(commit)):
-        raise ManifestError("provenance.environment_setup_commit must be a commit SHA when present")
     tests = value.get("fail_to_pass")
     if not isinstance(tests, list) or not tests or not all(isinstance(item, str) and item for item in tests):
         raise ManifestError("provenance.fail_to_pass must list the failing verification tests")
+
+    legacy_keys = {"benchmark", "instance_id", "dataset_url"}
+    if legacy_keys & set(value):
+        for key in ("benchmark", "instance_id", "dataset_url"):
+            _text(value, key, min_length=3)
+        commit = value.get("environment_setup_commit")
+        if commit is not None and (not isinstance(commit, str) or not _SHA.match(commit)):
+            raise ManifestError("provenance.environment_setup_commit must be a commit SHA when present")
+        return value
+
+    for key in ("base_commit", "fixed_commit", "fixed_first_parent"):
+        commit = _text(value, key, min_length=40)
+        if not _SHA.match(commit):
+            raise ManifestError(f"provenance.{key} must be a lowercase 40-character commit SHA")
+    if value.get("base_relation") != "direct-parent":
+        raise ManifestError("direct-upstream provenance needs base_relation direct-parent")
+    if value["base_commit"] != value["fixed_first_parent"]:
+        raise ManifestError("direct-upstream provenance needs base_commit equal to fixed_first_parent")
+    for key in ("issue_url", "selection_source"):
+        _text(value, key, min_length=10)
+    pr_url = value.get("pr_url", value.get("fix_pr_url"))
+    if not isinstance(pr_url, str) or len(pr_url.strip()) < 10:
+        raise ManifestError("direct-upstream provenance needs pr_url or fix_pr_url")
+    if not value["issue_url"].startswith("https://") or not pr_url.startswith("https://"):
+        raise ManifestError("direct-upstream issue and pull-request URLs must be HTTPS URLs")
+    test_files = value.get("test_files")
+    if not isinstance(test_files, list) or not test_files or not all(isinstance(item, str) and item for item in test_files):
+        raise ManifestError("direct-upstream provenance.test_files must list changed test files")
     return value
 
 
