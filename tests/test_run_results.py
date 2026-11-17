@@ -11,7 +11,7 @@ from harnesslab.run_results import load_run_results, parse_run_result, validate_
 from harnesslab.tasks import ManifestError, parse_task
 from harnesslab.verification import parse_evidence, parse_execution_evidence, parse_review_evidence
 
-from test_run_manifest import CLEAN_EVIDENCE, CLEAN_EXECUTION, CLEAN_REVIEW, CLEAN_SUITE, RUNNER_CONFIG
+from test_run_manifest import CLEAN_EVIDENCE, CLEAN_EXECUTION, CLEAN_REVIEW, CLEAN_SUITE, RUNNER_CONFIG, fixture_manifest
 from test_tasks import task_dict
 from test_verification import evidence_dict, execution_dict, review_dict
 from harnesslab.tasks import load_suite
@@ -113,15 +113,7 @@ class RunResultTests(unittest.TestCase):
             validate_run_results(manifest, [parse_run_result(changed)])
 
     def test_blocked_manifest_cannot_accept_results(self):
-        manifest = build_run_manifest(
-            load_suite(CLEAN_SUITE),
-            load_evidence(CLEAN_EVIDENCE),
-            load_execution_evidence(CLEAN_EXECUTION),
-            load_review_evidence(CLEAN_REVIEW),
-            runner_name="fixture-runner",
-            runner_version="0.1.0",
-            runner_config_sha256=RUNNER_CONFIG,
-        )
+        manifest = fixture_manifest()
         self.assertEqual(manifest["status"], "blocked_not_runnable")
         with self.assertRaisesRegex(ManifestError, "blocked"):
             validate_run_results(manifest, [])
