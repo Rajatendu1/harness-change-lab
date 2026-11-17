@@ -11,7 +11,7 @@ import re
 from typing import Any, Iterable
 
 from .tasks import ManifestError, TaskSpec
-from .verification import ExecutionEvidence, SourceEvidence, build_acceptance_status
+from .verification import ExecutionEvidence, ReviewEvidence, SourceEvidence, build_acceptance_status
 
 _RUNNER_NAME = re.compile(r"^[a-z0-9][a-z0-9.-]{2,63}$")
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
@@ -53,6 +53,7 @@ def build_run_manifest(
     tasks: Iterable[TaskSpec],
     evidence_rows: Iterable[SourceEvidence],
     execution_rows: Iterable[ExecutionEvidence],
+    review_rows: Iterable[ReviewEvidence] | None = None,
     *,
     runner_name: str,
     runner_version: str,
@@ -71,6 +72,7 @@ def build_run_manifest(
     task_items = list(tasks)
     evidence_items = list(evidence_rows)
     execution_items = list(execution_rows)
+    review_items = list(review_rows or [])
     runner = _runner({
         "name": runner_name,
         "version": runner_version,
@@ -78,7 +80,7 @@ def build_run_manifest(
     })
     trials = _trials(trials_per_task, "trials_per_task", minimum=1, maximum=20)
     concurrency = _trials(max_concurrency, "max_concurrency", minimum=1, maximum=8)
-    acceptance = build_acceptance_status(task_items, evidence_items, execution_items)
+    acceptance = build_acceptance_status(task_items, evidence_items, execution_items, review_items)
 
     blocked_reasons: list[str] = []
     manifest_tasks = []
@@ -125,6 +127,8 @@ def build_run_manifest(
             "task_count": acceptance["task_count"],
             "accepted_count": acceptance["accepted_count"],
             "upstream_source_verified_count": acceptance["upstream_source_verified_count"],
+            "engineering_review_status": acceptance["engineering_review_status"],
+            "engineering_review_recorded_count": acceptance["engineering_review_recorded_count"],
         },
         "trial_plan": {
             "trials_per_task": trials,
@@ -146,7 +150,7 @@ def build_run_manifest(
         "approval_gates": [
             "all tasks accepted under source-grounded owner authority",
             "repository and applicable benchmark-data rights accepted",
-            "independent task-spec review recorded",
+            "independent engineering review recorded without claiming task acceptance",
             "separate owner authority for model, agent, network or benchmark-data execution",
         ],
         "blocked_reasons": blocked_reasons,
@@ -162,6 +166,7 @@ def validate_run_manifest(
     tasks: Iterable[TaskSpec],
     evidence_rows: Iterable[SourceEvidence],
     execution_rows: Iterable[ExecutionEvidence],
+    review_rows: Iterable[ReviewEvidence] | None = None,
 ) -> dict[str, Any]:
     """Validate a manifest by recomputing it from the same evidence."""
     if not isinstance(manifest, dict):
@@ -174,6 +179,7 @@ def validate_run_manifest(
         tasks,
         evidence_rows,
         execution_rows,
+        review_rows,
         runner_name=runner["name"],
         runner_version=runner["version"],
         runner_config_sha256=runner["config_sha256"],
