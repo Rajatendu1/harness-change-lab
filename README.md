@@ -99,11 +99,33 @@ python -m harnesslab.cli acceptance-status \
   suites/m1-repair-v0.execution-evidence.jsonl
 ```
 
-The current status is `upstream_source_verified_not_accepted`. The rights
+The original-suite status is `upstream_source_verified_not_accepted`. The rights
 decision split is recorded in `docs/m1-rights-qualification.md`, and the prepared
 no-rerun independent review process is in
 `docs/m1-independent-review-packet.md`. Model access was not used for M2 and
 remains outside the verified scope.
+
+## M3 clean direct-path candidate package
+
+A separate clean-path proposal now has a structurally validated direct-upstream
+manifest, source evidence and execution evidence for five candidate tasks. The
+manifest supports both the original benchmark-derived provenance shape and the
+new direct-upstream shape without treating either as acceptance. The 17 November
+M3 run verified the three changed candidates (Xarray rebase, Click replacement
+and pytest rebase); Flask and Requests keep their applicable M2 evidence. The
+package status is `upstream_source_verified_not_accepted`: five upstream-source
+verified candidates, zero accepted tasks, pending rights and independent review.
+
+```sh
+python -m harnesslab.cli acceptance-status \
+  proposals/m1-direct-parent-clean-path.research.jsonl \
+  proposals/m1-direct-parent-clean-path.source-evidence.jsonl \
+  proposals/m1-direct-parent-clean-path.execution-evidence.jsonl
+```
+
+See `docs/m3-clean-direct-verification-run.md` for the one-shot M3 run record.
+This package is candidate evidence only; it is not an adopted suite, model
+result, coding-agent benchmark or completed harness milestone.
 
 ## Not yet verified
 
