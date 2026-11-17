@@ -18,3 +18,5 @@ This milestone makes the acceptance gates machine-readable without turning a rev
 3. Obtain separate authority before any coding-agent, model, network or benchmark-data execution.
 
 The M4 manifest remains prepare-only and blocked until those gates are resolved.
+
+Privacy guard: public review records must use generic private-channel references, never private message IDs or phone numbers. The test suite scans public files for those identifier shapes so this does not recur.
