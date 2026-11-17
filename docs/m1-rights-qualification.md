@@ -48,4 +48,4 @@ These are legal or policy choices, not technical review tasks to hand back to th
 
 ## Proposed next substantive scope
 
-Prepare a source-only M1 manifest proposal for review. It would keep the same five upstream repair cases and M2 evidence, replace SWE-bench-specific dataset fields with direct GitHub issue/PR provenance, and leave all tasks as candidates until independent review and the Pylint GPL policy decision are complete. This proposal should be reviewed before replacing the current registry, because it changes suite provenance and must not silently redefine acceptance.
+The prepared source-only proposal is `docs/m1-source-only-manifest-proposal.md`, with draft JSONL at `proposals/m1-repair-v0.source-only.proposed.jsonl`. It keeps the same five upstream repair cases and M2 evidence, replaces SWE-bench-specific dataset fields with direct GitHub issue/PR provenance, and leaves all tasks as candidates. It does not erase the historical selection caveat or make the Pylint GPL policy decision. Review it before replacing the current registry, because it changes suite provenance and must not silently redefine acceptance.
