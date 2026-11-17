@@ -58,12 +58,13 @@ No such accepted suite exists yet.
 `suites/m1-repair-v0.source-evidence.jsonl` records the original GitHub issue,
 fix pull request, pinned base commit, fixed commit, actual fixed first parent,
 base relation, ancestor gap, fixed-commit kind, changed implementation and test
-files, fixed-commit test patch URL and pinned license evidence for every
+files, full fixed-commit diff URL and pinned license evidence for every
 candidate. It is metadata, not execution evidence.
 
 The completed M2 execution evidence is recorded in
 `suites/m1-repair-v0.execution-evidence.jsonl` and `docs/m2-verification-run.md`.
-Check the acceptance state without rerunning upstream code:
+The execution JSONL records the exact local patch identity and applied test file
+for each job. Check the acceptance state without rerunning upstream code:
 
 ```sh
 python -m harnesslab.cli acceptance-status \
