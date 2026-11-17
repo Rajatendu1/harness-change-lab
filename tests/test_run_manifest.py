@@ -40,7 +40,7 @@ def fixture_manifest():
 
 
 class RunManifestTests(unittest.TestCase):
-    def test_clean_path_manifest_is_blocked_not_runnable(self):
+    def test_clean_path_manifest_is_ready_not_executed(self):
         manifest = build_run_manifest(
             load_suite(CLEAN_SUITE),
             load_evidence(CLEAN_EVIDENCE),
@@ -53,19 +53,15 @@ class RunManifestTests(unittest.TestCase):
             max_concurrency=1,
         )
         self.assertEqual(manifest["schema"], "m4-run-manifest-v0")
-        self.assertEqual(manifest["status"], "blocked_not_runnable")
+        self.assertEqual(manifest["status"], "ready_not_executed")
         self.assertEqual(manifest["suite"]["task_count"], 5)
-        self.assertEqual(manifest["suite"]["accepted_count"], 0)
+        self.assertEqual(manifest["suite"]["accepted_count"], 5)
         self.assertEqual(manifest["suite"]["engineering_review_status"], "recorded_read_only_not_acceptance")
         self.assertEqual(manifest["suite"]["engineering_review_recorded_count"], 5)
         self.assertEqual(manifest["trial_plan"]["total_trials"], 15)
         self.assertFalse(manifest["execution_policy"]["benchmark_data_use"])
         self.assertEqual(manifest["execution_policy"]["model_access"], "not_authorized_by_this_manifest")
-        self.assertTrue(manifest["blocked_reasons"])
-        self.assertFalse(any("independent engineering review not recorded" in item for item in manifest["blocked_reasons"]))
-        self.assertTrue(any("task acceptance decision pending" in item for item in manifest["blocked_reasons"]))
-        self.assertTrue(any("repository rights review pending" in item for item in manifest["blocked_reasons"]))
-        self.assertFalse(any("benchmark-data rights review pending" in item for item in manifest["blocked_reasons"]))
+        self.assertEqual(manifest["blocked_reasons"], [])
         for row in manifest["tasks"]:
             self.assertEqual(len(row["task_sha256"]), 64)
             self.assertEqual(len(row["verifier_sha256"]), 64)
@@ -127,9 +123,9 @@ class RunManifestCliTests(unittest.TestCase):
                 "--runner-version", "0.1.0",
                 "--runner-config-sha256", RUNNER_CONFIG,
             ])
-        self.assertEqual(code, 3)
+        self.assertEqual(code, 0)
         payload = json.loads(output.getvalue())
-        self.assertEqual(payload["status"], "blocked_not_runnable")
+        self.assertEqual(payload["status"], "ready_not_executed")
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "manifest.json"
             path.write_text(output.getvalue(), encoding="utf-8")
