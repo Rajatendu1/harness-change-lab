@@ -1,0 +1,335 @@
+name: M7 direct-upstream verifier
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m7-direct-upstream-verifier
+  cancel-in-progress: false
+
+jobs:
+  prepare-manifest:
+    name: Prepare bounded run manifest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.manifest.outputs.matrix }}
+      manifest_sha256: ${{ steps.manifest.outputs.manifest_sha256 }}
+      runner_config_sha256: ${{ steps.manifest.outputs.runner_config_sha256 }}
+    steps:
+      - name: Check out harness repository
+        uses: actions/checkout@v6
+      - name: Build ready manifest and trial matrix
+        id: manifest
+        run: |
+          set -euo pipefail
+          config_sha=$(sha256sum .github/workflows/m7-direct-upstream-verifier.yml | awk '{print $1}')
+          python -m harnesslab.cli prepare-run-manifest \
+            proposals/m1-direct-parent-clean-path.research.jsonl \
+            proposals/m1-direct-parent-clean-path.source-evidence.jsonl \
+            proposals/m1-direct-parent-clean-path.execution-evidence.jsonl \
+            proposals/m3-m4-independent-review.evidence.jsonl \
+            --runner-name github-actions-public-verifier \
+            --runner-version 2026.11.17 \
+            --runner-config-sha256 "$config_sha" \
+            --trials-per-task 3 \
+            --max-concurrency 5 >/tmp/m7-manifest.json
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          manifest = json.loads(Path('/tmp/m7-manifest.json').read_text(encoding='utf-8'))
+          if manifest['status'] != 'ready_not_executed':
+              raise SystemExit('manifest is not ready: ' + '; '.join(manifest.get('blocked_reasons', [])))
+          plan = manifest['trial_plan']
+          if plan['trials_per_task'] != 3 or plan['total_trials'] != 15 or plan['max_concurrency'] != 5:
+              raise SystemExit('manifest trial plan is outside the approved bound')
+          policy = manifest['execution_policy']
+          if policy['benchmark_data_use'] or policy['automatic_retry']:
+              raise SystemExit('manifest policy is outside the approved bound')
+          evidence_rows = [
+              json.loads(line)
+              for line in Path('proposals/m1-direct-parent-clean-path.execution-evidence.jsonl').read_text(encoding='utf-8').splitlines()
+              if line.strip()
+          ]
+          evidence = {row['id']: row for row in evidence_rows}
+          runtime = {
+              'm1-flask-dotted-blueprint': {'package': 'Flask', 'python_version': '3.9'},
+              'm1-requests-decode-unicode': {'package': 'requests', 'python_version': '3.7'},
+              'm1-xarray-unstack-single-dim': {'package': 'xarray', 'python_version': '3.7'},
+              'm1-click-hyphenated-help-wrap': {'package': 'click', 'python_version': '3.11'},
+              'm1-pytest-number-docstring': {'package': 'pytest', 'python_version': '3.11'},
+          }
+          include = []
+          for task in manifest['tasks']:
+              task_id = task['id']
+              if task_id not in evidence or task_id not in runtime:
+                  raise SystemExit(f'missing evidence or runtime for {task_id}')
+              row = evidence[task_id]
+              if len(task['setup']) != 1 or len(task['verify']) != 1 or task['timeout_s'] != 900:
+                  raise SystemExit(f'task commands or timeout are outside the approved bound for {task_id}')
+              repo = task['source']['url'].removeprefix('https://github.com/').removesuffix('.git')
+              for trial in range(1, 4):
+                  include.append({
+                      'id': task_id,
+                      'trial': trial,
+                      'repo': repo,
+                      'package': runtime[task_id]['package'],
+                      'python_version': runtime[task_id]['python_version'],
+                      'base_commit': row['source']['base_commit'],
+                      'fixed_commit': row['source']['fixed_commit'],
+                      'test_path': row['test_patch']['applied_files'][0],
+                      'setup': task['setup'][0],
+                      'verify': task['verify'][0],
+                      'task_revision': task['task_revision'],
+                      'task_sha256': task['task_sha256'],
+                      'verifier_sha256': task['verifier_sha256'],
+                  })
+          if len(include) != 15:
+              raise SystemExit(f'expected 15 trial jobs, got {len(include)}')
+          outputs = {
+              'matrix': json.dumps({'include': include}, separators=(',', ':')),
+              'manifest_sha256': manifest['manifest_sha256'],
+              'runner_config_sha256': manifest['runner']['config_sha256'],
+          }
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as stream:
+              for key, value in outputs.items():
+                  stream.write(f'{key}={value}\n')
+          PY
+
+  verify-upstream-source:
+    name: ${{ matrix.id }} trial ${{ matrix.trial }}
+    needs: prepare-manifest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix: ${{ fromJson(needs.prepare-manifest.outputs.matrix) }}
+    env:
+      REPO_URL: https://github.com/${{ matrix.repo }}.git
+      EXPECTED_MANIFEST_SHA256: ${{ needs.prepare-manifest.outputs.manifest_sha256 }}
+      EXPECTED_RUNNER_CONFIG_SHA256: ${{ needs.prepare-manifest.outputs.runner_config_sha256 }}
+    steps:
+      - name: Check out harness repository
+        uses: actions/checkout@v6
+      - name: Recheck manifest identity and job bounds
+        env:
+          MATRIX_TASK_ID: ${{ matrix.id }}
+          MATRIX_TASK_REVISION: ${{ matrix.task_revision }}
+          MATRIX_TASK_SHA256: ${{ matrix.task_sha256 }}
+          MATRIX_VERIFIER_SHA256: ${{ matrix.verifier_sha256 }}
+          MATRIX_SETUP: ${{ matrix.setup }}
+          MATRIX_VERIFY: ${{ matrix.verify }}
+        run: |
+          set -euo pipefail
+          echo "JOB_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >>"$GITHUB_ENV"
+          config_sha=$(sha256sum .github/workflows/m7-direct-upstream-verifier.yml | awk '{print $1}')
+          test "$config_sha" = "$EXPECTED_RUNNER_CONFIG_SHA256"
+          python -m harnesslab.cli prepare-run-manifest \
+            proposals/m1-direct-parent-clean-path.research.jsonl \
+            proposals/m1-direct-parent-clean-path.source-evidence.jsonl \
+            proposals/m1-direct-parent-clean-path.execution-evidence.jsonl \
+            proposals/m3-m4-independent-review.evidence.jsonl \
+            --runner-name github-actions-public-verifier \
+            --runner-version 2026.11.17 \
+            --runner-config-sha256 "$config_sha" \
+            --trials-per-task 3 \
+            --max-concurrency 5 >/tmp/m7-manifest.json
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          manifest = json.loads(Path('/tmp/m7-manifest.json').read_text(encoding='utf-8'))
+          if manifest['manifest_sha256'] != os.environ['EXPECTED_MANIFEST_SHA256']:
+              raise SystemExit('job manifest does not match the prepared manifest')
+          if manifest['status'] != 'ready_not_executed':
+              raise SystemExit('manifest is not ready')
+          task = next(item for item in manifest['tasks'] if item['id'] == os.environ['MATRIX_TASK_ID'])
+          checks = [
+              task['task_revision'] == os.environ['MATRIX_TASK_REVISION'],
+              task['task_sha256'] == os.environ['MATRIX_TASK_SHA256'],
+              task['verifier_sha256'] == os.environ['MATRIX_VERIFIER_SHA256'],
+              task['setup'] == [os.environ['MATRIX_SETUP']],
+              task['verify'] == [os.environ['MATRIX_VERIFY']],
+              task['timeout_s'] == 900,
+              manifest['trial_plan']['trials_per_task'] == 3,
+              manifest['trial_plan']['total_trials'] == 15,
+              manifest['trial_plan']['max_concurrency'] == 5,
+              manifest['execution_policy']['benchmark_data_use'] is False,
+              manifest['execution_policy']['automatic_retry'] is False,
+          ]
+          if not all(checks):
+              raise SystemExit('job matrix is outside the prepared manifest')
+          PY
+      - name: Set up historical Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Clone pinned upstream repository only
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none "$REPO_URL" upstream
+          cd upstream
+          git cat-file -e '${{ matrix.base_commit }}^{commit}'
+          git cat-file -e '${{ matrix.fixed_commit }}^{commit}'
+          git cat-file -e '${{ matrix.fixed_commit }}^'
+          git rev-parse --is-shallow-repository
+      - name: Apply only the fixed commit's upstream test patch to base
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          git checkout --detach '${{ matrix.base_commit }}'
+          git diff --binary '${{ matrix.fixed_commit }}^' '${{ matrix.fixed_commit }}' -- '${{ matrix.test_path }}' >/tmp/m7-test.patch
+          test -s /tmp/m7-test.patch
+          git apply --check /tmp/m7-test.patch
+          git apply /tmp/m7-test.patch
+          git diff --check
+      - name: Install base source
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          ${{ matrix.setup }}
+      - name: Verify base source fails
+        working-directory: upstream
+        run: |
+          set -u
+          start=$(date +%s)
+          set +e
+          timeout 900s bash -lc '${{ matrix.verify }}' >/tmp/m7-base.log 2>&1
+          status=$?
+          set -e
+          end=$(date +%s)
+          {
+            echo "BASE_STATUS=$status"
+            echo "BASE_DURATION_S=$((end - start))"
+          } >>"$GITHUB_ENV"
+          tail -40 /tmp/m7-base.log
+          if [ "$status" -eq 0 ]; then
+            echo 'Unexpected result: base source passed the fail-to-pass command.' >&2
+            exit 1
+          fi
+          if [ "$status" -ne 1 ]; then
+            echo "Invalid base-fail evidence: pytest exit $status is not an ordinary test failure." >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          log = Path('/tmp/m7-base.log').read_text(encoding='utf-8', errors='replace')
+          match = re.search(r'(\d+) failed', log)
+          if not match:
+              raise SystemExit('could not parse base pytest failed count')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as stream:
+              stream.write(f'BASE_FAILED_COUNT={match.group(1)}\n')
+          PY
+      - name: Check out and install fixed source
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          git reset --hard '${{ matrix.fixed_commit }}'
+          ${{ matrix.setup }}
+      - name: Verify fixed source passes
+        working-directory: upstream
+        run: |
+          set -u
+          start=$(date +%s)
+          set +e
+          timeout 900s bash -lc '${{ matrix.verify }}' >/tmp/m7-fixed.log 2>&1
+          status=$?
+          set -e
+          end=$(date +%s)
+          {
+            echo "FIXED_STATUS=$status"
+            echo "FIXED_DURATION_S=$((end - start))"
+          } >>"$GITHUB_ENV"
+          tail -40 /tmp/m7-fixed.log
+          if [ "$status" -ne 0 ]; then
+            echo 'Unexpected result: fixed source did not pass the verifier command.' >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          log = Path('/tmp/m7-fixed.log').read_text(encoding='utf-8', errors='replace')
+          match = re.search(r'(\d+) passed', log)
+          if not match:
+              raise SystemExit('could not parse fixed pytest passed count')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as stream:
+              stream.write(f'FIXED_PASSED_COUNT={match.group(1)}\n')
+          PY
+      - name: Emit M6 result record to the run log
+        env:
+          MATRIX_TASK_ID: ${{ matrix.id }}
+          MATRIX_TRIAL: ${{ matrix.trial }}
+          MATRIX_TASK_REVISION: ${{ matrix.task_revision }}
+          MATRIX_TASK_SHA256: ${{ matrix.task_sha256 }}
+          MATRIX_VERIFIER_SHA256: ${{ matrix.verifier_sha256 }}
+          M7_RUN_ID: m7-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+
+          row = {
+              'schema': 'm6-run-result-v0',
+              'status': 'completed',
+              'run_id': os.environ['M7_RUN_ID'],
+              'manifest_sha256': os.environ['EXPECTED_MANIFEST_SHA256'],
+              'trial_index': int(os.environ['MATRIX_TRIAL']),
+              'task': {
+                  'id': os.environ['MATRIX_TASK_ID'],
+                  'revision': os.environ['MATRIX_TASK_REVISION'],
+                  'task_sha256': os.environ['MATRIX_TASK_SHA256'],
+                  'verifier_sha256': os.environ['MATRIX_VERIFIER_SHA256'],
+              },
+              'runner': {
+                  'name': 'github-actions-public-verifier',
+                  'version': '2026.11.17',
+                  'config_sha256': os.environ['EXPECTED_RUNNER_CONFIG_SHA256'],
+              },
+              'started_at': os.environ['JOB_STARTED_AT'],
+              'completed_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+              'base': {
+                  'exit_code': int(os.environ['BASE_STATUS']),
+                  'duration_s': int(os.environ['BASE_DURATION_S']),
+                  'failed_count': int(os.environ['BASE_FAILED_COUNT']),
+              },
+              'fixed': {
+                  'exit_code': int(os.environ['FIXED_STATUS']),
+                  'duration_s': int(os.environ['FIXED_DURATION_S']),
+                  'passed_count': int(os.environ['FIXED_PASSED_COUNT']),
+              },
+              'policy': {
+                  'model_access': False,
+                  'benchmark_data_used': False,
+                  'secrets_used': False,
+                  'artifact_upload_count': 0,
+                  'automatic_retry': False,
+              },
+          }
+          line = json.dumps(row, sort_keys=True, separators=(',', ':'))
+          print('M6_RESULT_JSON=' + line)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as stream:
+              stream.write('### M7 direct-upstream verifier\n\n')
+              stream.write('| Field | Value |\n| --- | --- |\n')
+              stream.write('| Task | `' + os.environ['MATRIX_TASK_ID'] + '` |\n')
+              stream.write('| Trial | `' + os.environ['MATRIX_TRIAL'] + '` |\n')
+              stream.write('| Runner | `ubuntu-22.04` standard public-repository runner |\n')
+              stream.write('| Job timeout | 20 minutes |\n')
+              stream.write('| Benchmark data | Not downloaded or used |\n')
+              stream.write('| Secrets/model credentials/artifacts | None |\n')
+              stream.write('| Automatic retry | No |\n\n')
+              stream.write('```json\n' + line + '\n```\n')
+          PY
