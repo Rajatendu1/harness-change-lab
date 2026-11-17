@@ -476,25 +476,28 @@ def build_acceptance_status(
 
     verified_count = sum(1 for row in rows if row["execution_status"] == _EXECUTION_STATUS)
     complete = verified_count == len(rows)
-    if any("no benchmark dataset metadata" not in task.rights.data_use.lower() for task in task_items):
-        rights_work = "accept repository and benchmark-data rights for the intended evaluation use"
-    else:
-        rights_work = "accept repository rights for the intended evaluation use"
-    if len(reviewed_task_ids) == len(task_items):
-        review_work = "record owner task-acceptance decisions for every candidate"
-    else:
-        review_work = "record independent engineering review for every candidate"
-    remaining_work = [
-        rights_work,
-        review_work,
-        "obtain separate authority before any coding-agent, model or benchmark-data run",
-    ]
+    remaining_work = []
+    if summary["rights_pending_count"]:
+        if any("no benchmark dataset metadata" not in task.rights.data_use.lower() for task in task_items):
+            remaining_work.append("accept repository and benchmark-data rights for the intended evaluation use")
+        else:
+            remaining_work.append("accept repository rights for the intended evaluation use")
+    if len(reviewed_task_ids) != len(task_items):
+        remaining_work.append("record independent engineering review for every candidate")
+    elif summary["accepted_count"] != len(task_items):
+        remaining_work.append("record owner task-acceptance decisions for every candidate")
+    remaining_work.append("obtain separate authority before any coding-agent, model or benchmark-data run")
     ancestor_tasks = [task.id for task in task_items if source[task.id].base_relation == "ancestor"]
     if ancestor_tasks:
         remaining_work.insert(0, "resolve ancestor-base evidence qualification for: " + ", ".join(ancestor_tasks))
     return {
         "schema": "m1-acceptance-status-v0",
-        "status": "upstream_source_verified_not_accepted" if complete else "execution_evidence_incomplete",
+        "status": (
+            "upstream_source_verified_accepted"
+            if complete and summary["accepted_count"] == len(rows) and not summary["rights_pending_count"]
+            else "upstream_source_verified_not_accepted" if complete
+            else "execution_evidence_incomplete"
+        ),
         "suite_sha256": summary["suite_sha256"],
         "execution_evidence_sha256": _digest(execution_summaries),
         "task_count": len(rows),
