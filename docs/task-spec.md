@@ -9,10 +9,27 @@ Each task is one JSONL line:
   "setup": ["pip install -e .", "..."],
   "verify": ["pytest -q tests/test_x.py"],
   "timeout_s": 900,
-  "tags": ["python", "bugfix", "small"]
+  "tags": ["python", "bugfix", "small"],
+  "status": "candidate",
+  "provenance": {
+    "benchmark": "source benchmark or issue tracker",
+    "instance_id": "stable source identity",
+    "dataset_url": "https://...",
+    "environment_setup_commit": "<sha>",
+    "fail_to_pass": ["tests/test_x.py::test_case"]
+  },
+  "rights": {
+    "status": "pending",
+    "license": "source license or pending source review",
+    "license_url": "https://...",
+    "data_use": "what the current rights review permits",
+    "notes": "review caveats"
+  }
 }
 
 Rules:
 - Verifiable only: the verifier must pass/fail deterministically, no LLM-judge in M1.
 - Public repos only, pinned to a commit sha.
 - The base verifier must FAIL on the untouched repo and PASS after a correct fix (validated before the task enters the suite).
+- `candidate` tasks are not accepted benchmark tasks. An `accepted` task also needs an accepted rights review and recorded base-fail/fixed-pass execution evidence.
+- Provenance must identify the benchmark or issue source and preserve the exact fail-to-pass test identity used by the verifier.
