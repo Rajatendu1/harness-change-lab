@@ -72,6 +72,38 @@ class TaskSpecTests(unittest.TestCase):
         right = parse_task(changed)
         self.assertNotEqual(left.verifier_sha256, right.verifier_sha256)
 
+    def test_direct_upstream_candidate_provenance(self):
+        task = task_dict()
+        task["provenance"] = {
+            "base_commit": "a" * 40,
+            "fixed_commit": "b" * 40,
+            "fixed_first_parent": "a" * 40,
+            "base_relation": "direct-parent",
+            "issue_url": "https://github.com/example/project/issues/1",
+            "fix_pr_url": "https://github.com/example/project/pull/2",
+            "selection_source": "direct-upstream candidate",
+            "test_files": ["tests/test_example.py"],
+            "fail_to_pass": ["tests/test_example.py"],
+        }
+        parsed = parse_task(task)
+        self.assertEqual(parsed.provenance["base_commit"], "a" * 40)
+
+    def test_direct_upstream_provenance_rejects_ancestor_base(self):
+        task = task_dict()
+        task["provenance"] = {
+            "base_commit": "a" * 40,
+            "fixed_commit": "b" * 40,
+            "fixed_first_parent": "c" * 40,
+            "base_relation": "direct-parent",
+            "issue_url": "https://github.com/example/project/issues/1",
+            "fix_pr_url": "https://github.com/example/project/pull/2",
+            "selection_source": "direct-upstream candidate",
+            "test_files": ["tests/test_example.py"],
+            "fail_to_pass": ["tests/test_example.py"],
+        }
+        with self.assertRaisesRegex(ManifestError, "equal to fixed_first_parent"):
+            parse_task(task)
+
     def test_suite_summary_counts_candidates(self):
         summary = suite_summary([parse_task(task_dict())])
         self.assertEqual(summary["task_count"], 1)
