@@ -9,7 +9,8 @@ The fixed clean-path workflow was executed once as GitHub Actions run [#1](https
 - Workflow commit: `6ac1091c367f787dc5586a627e41610e7581b986`
 - Workflow SHA-256: `28edc29e5ef117430bea29c5e9e3024c32ce213f2999f8771b838ecaa77a11de`
 - Executed manifest: `proposals/m1-direct-parent-clean-path.research.jsonl`
-- Executed manifest SHA-256: `8620bb20b3530dfa2d65b7f47de60f569ab436cd7c6dd323b9118ed4300b492a`
+- Executed manifest raw-byte SHA-256: `0004c108e34b55adc2ae8a4097e40b7d927e2cb18a9a060c1f6532bfb8ca9559`
+- Executed manifest canonical suite identity hash: `8620bb20b3530dfa2d65b7f47de60f569ab436cd7c6dd323b9118ed4300b492a`
 - Trigger: one explicit `workflow_dispatch`
 - Runner label: `ubuntu-22.04`
 - Job timeout: 20 minutes per candidate
