@@ -8,7 +8,7 @@ Find a five-task path that is direct-upstream, clearly licensed and direct-paren
 
 Draft cards: `proposals/m1-direct-parent-clean-path.research.jsonl`.
 
-Proposed research-suite hash: `8620bb20b3530dfa2d65b7f47de60f569ab436cd7c6dd323b9118ed4300b492a`.
+Proposed research-suite identity hash (canonical task objects): `8620bb20b3530dfa2d65b7f47de60f569ab436cd7c6dd323b9118ed4300b492a`. The manifest file raw-byte SHA-256 is `0004c108e34b55adc2ae8a4097e40b7d927e2cb18a9a060c1f6532bfb8ca9559`.
 
 ## Result
 
@@ -39,7 +39,7 @@ The fixed commit's first parent is `8abb77a8432e03ed14a95f972b44f905279415a7`, w
 
 ## Fixed bounded execution proposal
 
-The manifest to execute is `proposals/m1-direct-parent-clean-path.research.jsonl` at hash `8620bb20b3530dfa2d65b7f47de60f569ab436cd7c6dd323b9118ed4300b492a`. The prepared workflow is `.github/workflows/m3-clean-direct-verification.yml`.
+The manifest to execute is `proposals/m1-direct-parent-clean-path.research.jsonl` with raw-byte SHA-256 `0004c108e34b55adc2ae8a4097e40b7d927e2cb18a9a060c1f6532bfb8ca9559` and canonical suite identity hash `8620bb20b3530dfa2d65b7f47de60f569ab436cd7c6dd323b9118ed4300b492a`. The prepared workflow is `.github/workflows/m3-clean-direct-verification.yml`.
 
 The workflow is fixed to exactly three changed candidates: the Xarray rebase, the Click replacement and the pytest rebase. Flask and Requests are not rerun. It uses one explicit `workflow_dispatch`, public upstream clones, pinned base/fixed commits, focused fixed-commit test diffs, `ubuntu-22.04`, a 20-minute per-candidate timeout, no benchmark dataset download, no model or provider access, no secrets, no paid services, no cache, no artifacts and no automatic retry. A base exit other than an ordinary pytest failure fails closed, and any fixed-side failure fails the job. Results would be candidate execution evidence only, not acceptance.
 
