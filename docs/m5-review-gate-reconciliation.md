@@ -15,7 +15,7 @@ This milestone makes the acceptance gates machine-readable without turning a rev
 
 On 17 November 2026, the owner accepted the five direct-upstream test cases under their pinned MIT, BSD and Apache repository license terms and approved one bounded 15-trial verification batch on free public GitHub runners. The private approval record is retained by Instinct and is not republished here.
 
-That approval resolves repository-rights acceptance and owner task acceptance for this direct-upstream package only. It does not approve AI evaluation, coding-agent runs, benchmark-data use, paid services or any later batch. The M4 manifest can now be `ready_not_executed` for the approved M7 runner configuration.
+That approval resolves repository-rights acceptance and owner task acceptance for this direct-upstream package only. It does not approve AI evaluation, coding-agent runs, benchmark-data use, paid services or any later batch. The M4 manifest can now be `ready_not_executed` for the approved M7 runner configuration. This is a prepare-only status, not standing execution authority; the M7 batch approval was consumed by its completed run and the consumed-authority record is `proposals/m8-coding-agent-smoke.run.json`.
 
 The review evidence row was re-bound from the candidate-suite hash to the accepted-suite hash `f6ad2081931c4ea4945d74b960596b91786a911a74d913a4c8d3d641b2e5084f`. That re-binding records only the owner status and rights bookkeeping change; it is not a new engineering review and does not turn review into acceptance.
 

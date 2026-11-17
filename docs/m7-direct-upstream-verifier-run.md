@@ -53,7 +53,7 @@ Every task/trial job completed successfully. Each job recloned its pinned public
 
 The result JSON records were extracted from the run's GitHub job summaries and validated locally against the recomputed manifest. The M6 validator checks record identity, completeness and policy fields; it does not execute, replay or authenticate GitHub Actions logs. GitHub reports run attempt 1 with 16 successful jobs.
 
-This run verifies harness execution and result intake for the accepted direct-upstream suite. It is not a coding-agent result, model-quality result, benchmark-dataset run, production gate or proof that the harness is finished. Further batches, retries, AI evaluation, benchmark-data use and paid services require separate authority.
+This run verifies harness execution and result intake for the accepted direct-upstream suite. The preceding M4 readiness was prepare-only, and its one-batch execution approval was consumed by this completed run; see the consumed-authority record in `proposals/m8-coding-agent-smoke.run.json`. It is not a coding-agent result, model-quality result, benchmark-dataset run, production gate or proof that the harness is finished. Further batches, retries, AI evaluation, benchmark-data use and paid services require separate authority.
 
 ## Acceptance status after this run
 

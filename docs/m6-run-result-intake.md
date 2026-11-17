@@ -6,7 +6,7 @@ M6 adds a validation contract for result records supplied by a future authorized
 
 ## Boundary
 
-- After the M7 owner acceptance, the clean direct-upstream package produced a `ready_not_executed` manifest for the approved M7 runner configuration. The single authorized M7 batch has now run; its public result records and run record are in `proposals/m7-direct-upstream-verifier.results.jsonl` and `docs/m7-direct-upstream-verifier-run.md`.
+- After the M7 owner acceptance, the clean direct-upstream package produced a `ready_not_executed` manifest for the approved M7 runner configuration. The single authorized M7 batch has now run; its public result records and run record are in `proposals/m7-direct-upstream-verifier.results.jsonl` and `docs/m7-direct-upstream-verifier-run.md`. That readiness was prepare-only and was consumed by the completed M7 batch; it left no reusable execution authority. The consumed-authority record is `proposals/m8-coding-agent-smoke.run.json`.
 - Fixture results in tests only exercise the intake schema. They are not execution evidence and are not stored as project results.
 - A result row must match the manifest hash, runner identity, task revision, task hash, verifier hash and planned trial index.
 - A complete result set must cover every planned task/trial exactly once.

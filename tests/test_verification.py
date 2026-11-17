@@ -315,6 +315,7 @@ class PublicPrivacyTests(unittest.TestCase):
             re.compile("wa" + r"mid\."),
             re.compile(r"\b(?:" + message_prefixes + r")-[0-9A-Z]{20,}\b"),
             re.compile(r"\+[0-9]{10,15}\b"),
+            re.compile(r"\b91[6-9][0-9]{9}\b"),
         )
         offenders = []
         for path in Path(".").rglob("*"):

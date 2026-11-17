@@ -1,0 +1,39 @@
+{
+  "schema": "m8-agent-smoke-run-v0",
+  "status": "completed_consumed",
+  "run": {
+    "id": 44092986637,
+    "attempt": 1,
+    "event": "workflow_dispatch",
+    "url": "https://github.com/Rajatendu1/harness-change-lab/actions/runs/44092986637",
+    "head_sha": "bff560754ae9b90ab7250cb6284366a05b6c0a17",
+    "workflow_path": ".github/workflows/m8-coding-agent-smoke.yml",
+    "workflow_sha256": "7a83245ee2c44a65dbb7677c50c442d6e945e0c0d4180649257d329435efbd1b",
+    "pre_rewrite_head_sha": "6bac63fa98a6a6783089b05ee564fb57e0115a63"
+  },
+  "results": {
+    "path": "proposals/m8-coding-agent-smoke.results.jsonl",
+    "sha256": "a28e7eee03dfbab9d54c24b0a64213b729bddc8a288bb666ce6a6a32d4824d8f",
+    "task_count": 5,
+    "agent_message_count_per_task": 1
+  },
+  "approval_scope": {
+    "task_rights": "The five open-source task source/license acceptances are task metadata, not standing execution authority.",
+    "m7_execution": {
+      "status": "consumed",
+      "scope": "one bounded direct-upstream verification batch",
+      "run_url": "https://github.com/Rajatendu1/harness-change-lab/actions/runs/44089045408"
+    },
+    "m8_execution": {
+      "status": "consumed",
+      "scope": "one five-trial coding-agent smoke; one initial dispatch failed before provider use and one approved manual relaunch completed the smoke",
+      "run_url": "https://github.com/Rajatendu1/harness-change-lab/actions/runs/44092986637"
+    },
+    "remaining_execution_authority": "none"
+  },
+  "privacy": {
+    "private_approval_identifiers": "not recorded",
+    "private_channel_identifiers": "not recorded"
+  },
+  "interpretation": "descriptive record only; not consulted by manifest or acceptance code; grants no execution authority"
+}
