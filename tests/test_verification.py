@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 from harnesslab.cli import main
-from harnesslab.tasks import ManifestError, load_suite
+from harnesslab.tasks import ManifestError, load_suite, parse_task, suite_summary
 from harnesslab.verification import (
     build_acceptance_status,
     build_verification_plan,
@@ -14,6 +14,8 @@ from harnesslab.verification import (
     load_execution_evidence,
     parse_evidence,
     parse_execution_evidence,
+    parse_review_evidence,
+    load_review_evidence,
 )
 
 from test_tasks import task_dict
@@ -25,6 +27,7 @@ EXECUTION = Path("suites/m1-repair-v0.execution-evidence.jsonl")
 CLEAN_SUITE = Path("proposals/m1-direct-parent-clean-path.research.jsonl")
 CLEAN_EVIDENCE = Path("proposals/m1-direct-parent-clean-path.source-evidence.jsonl")
 CLEAN_EXECUTION = Path("proposals/m1-direct-parent-clean-path.execution-evidence.jsonl")
+CLEAN_REVIEW = Path("proposals/m3-m4-independent-review.evidence.jsonl")
 
 
 def evidence_dict(task_id="m1-example-task", source_ref="a" * 40, **overrides):
@@ -96,6 +99,27 @@ def execution_dict(task_id="m1-example-task", source_ref="a" * 40, fixed_ref="b"
             "applied_files": ["tests/test_example.py"],
             "scope": "M2 applied only this matrix test_path; source-evidence test_files lists all upstream fixed-commit test-file changes.",
         },
+    }
+    item.update(overrides)
+    return item
+
+
+def review_dict(task=None, **overrides):
+    if task is None:
+        task = parse_task(task_dict())
+    item = {
+        "id": "example-independent-review",
+        "status": "engineering-review-recorded-not-acceptance",
+        "suite_sha256": suite_summary([task])["suite_sha256"],
+        "task_ids": [task.id],
+        "record_url": "https://github.com/example/project/blob/main/docs/review.md",
+        "record_commit": "e" * 40,
+        "reviewed_at": "2026-11-17T18:05:52+05:30",
+        "scope": "Read-only review of the example task evidence and runner contract.",
+        "limitations": [
+            "Read-only review; it is not task acceptance, rights acceptance or execution authority.",
+        ],
+        "acceptance_decision": "none",
     }
     item.update(overrides)
     return item
@@ -177,7 +201,7 @@ class ExecutionEvidenceTests(unittest.TestCase):
         self.assertTrue(any("accept repository and benchmark-data rights" in item for item in status["remaining_acceptance_work"]))
         self.assertTrue(all(row["base_exit_code"] == 1 for row in status["tasks"]))
         self.assertTrue(all(row["fixed_exit_code"] == 0 for row in status["tasks"]))
-        self.assertTrue(all("independent task-spec review" in row["blockers"][-1] for row in status["tasks"]))
+        self.assertTrue(all("independent engineering review not recorded" in row["blockers"] for row in status["tasks"]))
         execution = {row["id"]: row for row in status["execution"]}
         self.assertEqual(execution["m1-flask-dotted-blueprint"]["test_patch_applied_files"], ["tests/test_blueprints.py"])
         self.assertIn("git diff --binary", execution["m1-flask-dotted-blueprint"]["test_patch_identity"])
@@ -202,6 +226,37 @@ class ExecutionEvidenceTests(unittest.TestCase):
         self.assertEqual(rows["m1-pytest-number-docstring"]["ancestor_gap_commits"], 0)
         self.assertTrue(all(row["base_exit_code"] == 1 for row in status["tasks"]))
         self.assertTrue(all(row["fixed_exit_code"] == 0 for row in status["tasks"]))
+
+    def test_clean_path_review_record_removes_stale_gate_without_acceptance(self):
+        status = build_acceptance_status(
+            load_suite(CLEAN_SUITE),
+            load_evidence(CLEAN_EVIDENCE),
+            load_execution_evidence(CLEAN_EXECUTION),
+            load_review_evidence(CLEAN_REVIEW),
+        )
+        self.assertEqual(status["engineering_review_status"], "recorded_read_only_not_acceptance")
+        self.assertEqual(status["engineering_review_recorded_count"], 5)
+        self.assertEqual(status["accepted_count"], 0)
+        self.assertEqual(status["rights_pending_count"], 5)
+        self.assertTrue(all(row["engineering_review_recorded"] for row in status["tasks"]))
+        self.assertTrue(all("independent engineering review not recorded" not in row["blockers"] for row in status["tasks"]))
+        self.assertTrue(all("task acceptance decision pending" in row["blockers"] for row in status["tasks"]))
+        self.assertIn("record owner task-acceptance decisions", status["remaining_acceptance_work"][1])
+        self.assertEqual(status["remaining_acceptance_work"][0], "accept repository rights for the intended evaluation use")
+        self.assertTrue(all(row["blockers"][0] == "repository rights review pending" for row in status["tasks"]))
+
+    def test_review_record_cannot_claim_acceptance(self):
+        bad = review_dict(acceptance_decision="accepted")
+        with self.assertRaisesRegex(ManifestError, "cannot record task acceptance"):
+            parse_review_evidence(bad)
+
+    def test_review_record_must_match_suite_identity(self):
+        task = parse_task(task_dict())
+        review = parse_review_evidence(review_dict(task, suite_sha256="0" * 64))
+        evidence = parse_evidence(evidence_dict(task.id, task.source_ref))
+        execution = parse_execution_evidence(execution_dict(task.id, task.source_ref, evidence.fixed_commit))
+        with self.assertRaisesRegex(ManifestError, "does not match the suite identity"):
+            build_acceptance_status([task], [evidence], [execution], [review])
 
     def test_source_evidence_allows_no_benchmark_for_direct_upstream_candidate(self):
         evidence = evidence_dict()
