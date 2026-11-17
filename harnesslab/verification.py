@@ -72,6 +72,10 @@ class ExecutionEvidence:
     fixed_passed_count: int
     base_commit: str
     fixed_commit: str
+    test_patch_identity: str
+    test_patch_source_url: str
+    test_patch_applied_files: tuple[str, ...]
+    test_patch_scope: str
 
 
 def _digest(value: Any) -> str:
@@ -212,8 +216,12 @@ def parse_execution_evidence(mapping: dict[str, Any]) -> ExecutionEvidence:
     base = mapping.get("base")
     fixed = mapping.get("fixed")
     source = mapping.get("source")
-    if not all(isinstance(value, dict) for value in (run, runtime, base, fixed, source)):
-        raise ManifestError("execution evidence needs run, runtime, base, fixed and source objects")
+    test_patch = mapping.get("test_patch")
+    if not all(isinstance(value, dict) for value in (run, runtime, base, fixed, source, test_patch)):
+        raise ManifestError("execution evidence needs run, runtime, base, fixed, source and test_patch objects")
+    applied_files = test_patch.get("applied_files")
+    if not isinstance(applied_files, list) or not applied_files or not all(isinstance(item, str) and item for item in applied_files):
+        raise ManifestError("test_patch.applied_files must be a non-empty list of paths")
     status = _text(mapping, "status")
     if status != _EXECUTION_STATUS:
         raise ManifestError(f"execution status must be {_EXECUTION_STATUS}")
@@ -260,6 +268,10 @@ def parse_execution_evidence(mapping: dict[str, Any]) -> ExecutionEvidence:
         fixed_passed_count=_int(fixed, "passed_count", minimum=1, maximum=1000),
         base_commit=_sha(source, "base_commit"),
         fixed_commit=_sha(source, "fixed_commit"),
+        test_patch_identity=_text(test_patch, "identity", min_length=20),
+        test_patch_source_url=_https(test_patch, "source_url"),
+        test_patch_applied_files=tuple(item.strip() for item in applied_files),
+        test_patch_scope=_text(test_patch, "scope", min_length=10),
     )
 
 
@@ -311,6 +323,12 @@ def build_acceptance_status(
                 raise ManifestError(f"execution evidence base commit does not match task source for {task.id}")
             if execution_item.fixed_commit != source_item.fixed_commit:
                 raise ManifestError(f"execution evidence fixed commit does not match source evidence for {task.id}")
+            if execution_item.test_patch_source_url != source_item.test_patch_url:
+                raise ManifestError(f"execution evidence test patch source does not match source evidence for {task.id}")
+            if not set(execution_item.test_patch_applied_files).issubset(set(source_item.test_files)):
+                raise ManifestError(f"execution evidence applied test files are outside source evidence for {task.id}")
+            if execution_item.fixed_commit not in execution_item.test_patch_identity:
+                raise ManifestError(f"execution evidence test patch identity does not name the fixed commit for {task.id}")
             execution_summaries.append({
                 "id": execution_item.id,
                 "status": execution_item.status,
@@ -323,6 +341,8 @@ def build_acceptance_status(
                 "fixed_exit_code": execution_item.fixed_exit_code,
                 "base_failed_count": execution_item.base_failed_count,
                 "fixed_passed_count": execution_item.fixed_passed_count,
+                "test_patch_identity": execution_item.test_patch_identity,
+                "test_patch_applied_files": list(execution_item.test_patch_applied_files),
             })
         blockers = []
         if source_item.base_relation == "ancestor":
@@ -371,6 +391,7 @@ def build_acceptance_status(
         "benchmark_data_used": False,
         "remaining_acceptance_work": remaining_work,
         "tasks": rows,
+        "execution": execution_summaries,
     }
 
 
