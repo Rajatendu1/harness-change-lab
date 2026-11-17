@@ -34,8 +34,8 @@ The project can finish the technical and source-license work without asking the 
 - Keep checking whether either Hugging Face dataset adds a license field or tag.
 - Keep the pinned upstream license URLs and file hashes current.
 - Preserve the current boundary: no Hugging Face rows, patches, problem statements or test patches; use original public GitHub issues, pull requests, repositories and test commands.
-- Prepare an independent task-spec review packet and have a separate reviewer inspect it. This review does not need another external run because the M2 run page, workflow, manifests and execution evidence are already recorded.
-- Prepare a source-only alternative that uses direct GitHub issue/PR provenance instead of SWE-bench Lite identifiers, if the project chooses to avoid the undeclared dataset-metadata risk.
+- Reconcile the repaired independent task-spec review packet with a separate reviewer. This review does not need another external run because the M2 run page, workflow, manifests and execution evidence are already recorded.
+- Review the prepared source-only alternative that uses direct GitHub issue/PR provenance instead of SWE-bench Lite identifiers, if the project chooses to avoid the undeclared dataset-metadata risk.
 
 ## What needs the user's decision
 
@@ -44,8 +44,9 @@ These are legal or policy choices, not technical review tasks to hand back to th
 1. Whether to keep the GPL-2.0 Pylint task under a distribution boundary that does not vendor or bundle Pylint code in the harness repository.
 2. Whether to accept or remove SWE-bench Lite-derived provenance while the dataset license remains undeclared.
 3. Whether to ask SWE-bench maintainers for a dataset-license clarification. Sending that request would be a new external communication and needs its own approval.
-4. Whether any future coding-agent, model or benchmark-data run is allowed. That remains outside the current authority.
+4. Whether ancestor bases are acceptable as qualified evidence for Xarray and pytest, or whether those candidates should be replaced or re-based under separate authority.
+5. Whether any future coding-agent, model or benchmark-data run is allowed. That remains outside the current authority.
 
 ## Proposed next substantive scope
 
-The prepared source-only proposal is `docs/m1-source-only-manifest-proposal.md`, with draft JSONL at `proposals/m1-repair-v0.source-only.proposed.jsonl`. It keeps the same five upstream repair cases and M2 evidence, replaces SWE-bench-specific dataset fields with direct GitHub issue/PR provenance, and leaves all tasks as candidates. It does not erase the historical selection caveat or make the Pylint GPL policy decision. Review it before replacing the current registry, because it changes suite provenance and must not silently redefine acceptance.
+The prepared source-only proposal is `docs/m1-source-only-manifest-proposal.md`, with draft JSONL at `proposals/m1-repair-v0.source-only.proposed.jsonl`. It keeps the same five upstream repair cases and M2 evidence, replaces SWE-bench-specific dataset fields with direct GitHub issue/PR provenance, and leaves all tasks as candidates. It does not erase the historical selection caveat, resolve the Xarray/pytest ancestor-base qualification, or make the Pylint GPL policy decision. Review it before replacing the current registry, because it changes suite provenance and must not silently redefine acceptance.
