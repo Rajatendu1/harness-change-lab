@@ -26,10 +26,13 @@ jobs:
         run: |
           set -euo pipefail
           config_sha=$(sha256sum .github/workflows/m8-coding-agent-smoke.yml | awk '{print $1}')
+          export CONFIG_SHA="$config_sha"
           python - <<'PY'
           import json
           import os
           from pathlib import Path
+
+          config_sha = os.environ['CONFIG_SHA']
 
           research = [json.loads(line) for line in Path('proposals/m1-direct-parent-clean-path.research.jsonl').read_text(encoding='utf-8').splitlines() if line.strip()]
           evidence = {row['id']: row for row in (json.loads(line) for line in Path('proposals/m1-direct-parent-clean-path.execution-evidence.jsonl').read_text(encoding='utf-8').splitlines() if line.strip())}
