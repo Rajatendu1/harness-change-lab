@@ -22,12 +22,20 @@ class SourceEvidence:
     id: str
     repo: str
     base_commit: str
-    fixed_merge_commit: str
+    fixed_commit: str
+    fixed_first_parent: str
+    base_relation: str
+    ancestor_gap_commits: int
+    fixed_commit_kind: str
     issue_url: str
     issue_title: str
     pr_url: str
     pr_title: str
     test_files: tuple[str, ...]
+    implementation_files: tuple[str, ...]
+    test_patch_url: str
+    test_patch_scope: str
+    evidence_qualification: str
     license_spdx: str
     license_url: str
     license_file_sha256: str
@@ -63,7 +71,7 @@ class ExecutionEvidence:
     fixed_duration_s: int
     fixed_passed_count: int
     base_commit: str
-    fixed_merge_commit: str
+    fixed_commit: str
 
 
 def _digest(value: Any) -> str:
@@ -125,19 +133,43 @@ def parse_evidence(mapping: dict[str, Any]) -> SourceEvidence:
     files = source.get("test_files")
     if not isinstance(files, list) or not files or not all(isinstance(item, str) and item for item in files):
         raise ManifestError("source.test_files must be a non-empty list of paths")
+    implementation_files = source.get("implementation_files")
+    if not isinstance(implementation_files, list) or not implementation_files or not all(isinstance(item, str) and item for item in implementation_files):
+        raise ManifestError("source.implementation_files must be a non-empty list of paths")
+    base_relation = _text(source, "base_relation")
+    if base_relation not in {"direct-parent", "ancestor"}:
+        raise ManifestError("source.base_relation must be direct-parent or ancestor")
+    fixed_commit_kind = _text(source, "fixed_commit_kind")
+    if fixed_commit_kind not in {"merge", "single-parent"}:
+        raise ManifestError("source.fixed_commit_kind must be merge or single-parent")
+    base_commit = _sha(source, "base_commit")
+    fixed_first_parent = _sha(source, "fixed_first_parent")
+    ancestor_gap_commits = _int(source, "ancestor_gap_commits", minimum=0, maximum=100000)
+    if base_relation == "direct-parent" and (fixed_first_parent != base_commit or ancestor_gap_commits != 0):
+        raise ManifestError("direct-parent evidence needs fixed_first_parent equal to base_commit and zero ancestor gap")
+    if base_relation == "ancestor" and (fixed_first_parent == base_commit or ancestor_gap_commits < 1):
+        raise ManifestError("ancestor evidence needs a different fixed_first_parent and a positive ancestor gap")
     status = _text(mapping, "status")
     if status != _EVIDENCE_STATUS:
         raise ManifestError(f"evidence status must be {_EVIDENCE_STATUS}")
     return SourceEvidence(
         id=_text(mapping, "id", min_length=3),
         repo=_text(source, "repo", min_length=3),
-        base_commit=_sha(source, "base_commit"),
-        fixed_merge_commit=_sha(source, "fixed_merge_commit"),
+        base_commit=base_commit,
+        fixed_commit=_sha(source, "fixed_commit"),
+        fixed_first_parent=fixed_first_parent,
+        base_relation=base_relation,
+        ancestor_gap_commits=ancestor_gap_commits,
+        fixed_commit_kind=fixed_commit_kind,
         issue_url=_https(source, "issue_url"),
         issue_title=_text(source, "issue_title", min_length=10),
         pr_url=_https(source, "pr_url"),
         pr_title=_text(source, "pr_title", min_length=10),
         test_files=tuple(item.strip() for item in files),
+        implementation_files=tuple(item.strip() for item in implementation_files),
+        test_patch_url=_https(source, "test_patch_url"),
+        test_patch_scope=_text(source, "test_patch_scope", min_length=10),
+        evidence_qualification=_text(source, "evidence_qualification", min_length=10),
         license_spdx=_text(license_info, "spdx_id", min_length=3),
         license_url=_https(license_info, "url"),
         license_file_sha256=_hex64(license_info, "file_sha256"),
@@ -227,7 +259,7 @@ def parse_execution_evidence(mapping: dict[str, Any]) -> ExecutionEvidence:
         fixed_duration_s=_int(fixed, "duration_s", minimum=0, maximum=1200),
         fixed_passed_count=_int(fixed, "passed_count", minimum=1, maximum=1000),
         base_commit=_sha(source, "base_commit"),
-        fixed_merge_commit=_sha(source, "fixed_merge_commit"),
+        fixed_commit=_sha(source, "fixed_commit"),
     )
 
 
@@ -277,7 +309,7 @@ def build_acceptance_status(
         if execution_item is not None:
             if execution_item.base_commit != task.source_ref:
                 raise ManifestError(f"execution evidence base commit does not match task source for {task.id}")
-            if execution_item.fixed_merge_commit != source_item.fixed_merge_commit:
+            if execution_item.fixed_commit != source_item.fixed_commit:
                 raise ManifestError(f"execution evidence fixed commit does not match source evidence for {task.id}")
             execution_summaries.append({
                 "id": execution_item.id,
@@ -293,6 +325,8 @@ def build_acceptance_status(
                 "fixed_passed_count": execution_item.fixed_passed_count,
             })
         blockers = []
+        if source_item.base_relation == "ancestor":
+            blockers.append("ancestor-base evidence qualification pending")
         if task.rights.status == "pending":
             blockers.append("repository and benchmark-data rights review pending")
         elif task.rights.status != "accepted":
@@ -305,6 +339,8 @@ def build_acceptance_status(
             "task_status": task.status,
             "rights_status": task.rights.status,
             "execution_status": execution_item.status if execution_item else "missing",
+            "base_relation": source_item.base_relation,
+            "ancestor_gap_commits": source_item.ancestor_gap_commits,
             "base_exit_code": execution_item.base_exit_code if execution_item else None,
             "fixed_exit_code": execution_item.fixed_exit_code if execution_item else None,
             "accepted": task.status == "accepted",
@@ -314,6 +350,14 @@ def build_acceptance_status(
     summary = suite_summary(task_items)
     verified_count = sum(1 for row in rows if row["execution_status"] == _EXECUTION_STATUS)
     complete = verified_count == len(rows)
+    remaining_work = [
+        "accept repository and benchmark-data rights for the intended evaluation use",
+        "record independent review against docs/task-spec.md for every candidate",
+        "obtain separate authority before any coding-agent, model or benchmark-data run",
+    ]
+    ancestor_tasks = [task.id for task in task_items if source[task.id].base_relation == "ancestor"]
+    if ancestor_tasks:
+        remaining_work.insert(0, "resolve ancestor-base evidence qualification for: " + ", ".join(ancestor_tasks))
     return {
         "schema": "m1-acceptance-status-v0",
         "status": "upstream_source_verified_not_accepted" if complete else "execution_evidence_incomplete",
@@ -325,11 +369,7 @@ def build_acceptance_status(
         "rights_pending_count": summary["rights_pending_count"],
         "model_or_agent_runs": 0,
         "benchmark_data_used": False,
-        "remaining_acceptance_work": [
-            "accept repository and benchmark-data rights for the intended evaluation use",
-            "record independent review against docs/task-spec.md for every candidate",
-            "obtain separate authority before any coding-agent, model or benchmark-data run",
-        ],
+        "remaining_acceptance_work": remaining_work,
         "tasks": rows,
     }
 
@@ -358,17 +398,23 @@ def build_verification_plan(
                 "repo": item.repo,
                 "url": task.source_url,
                 "base_commit": task.source_ref,
-                "fixed_merge_commit": item.fixed_merge_commit,
+                "fixed_commit": item.fixed_commit,
+                "fixed_first_parent": item.fixed_first_parent,
+                "base_relation": item.base_relation,
+                "ancestor_gap_commits": item.ancestor_gap_commits,
+                "fixed_commit_kind": item.fixed_commit_kind,
                 "issue_url": item.issue_url,
                 "pr_url": item.pr_url,
                 "test_files": list(item.test_files),
+                "implementation_files": list(item.implementation_files),
+                "test_patch_url": item.test_patch_url,
             },
             "setup": list(task.setup),
             "verify": list(task.verify),
             "timeout_s": task.timeout_s,
             "expected": {
                 "base": "at least one fail_to_pass test fails before the fix",
-                "fixed": "all listed verifier commands pass at the fixed merge commit",
+                "fixed": "all listed verifier commands pass at the fixed commit",
             },
             "provenance": {
                 "task_sha256": task.summary()["task_sha256"],
@@ -379,6 +425,8 @@ def build_verification_plan(
                 "benchmark_dataset": item.benchmark_dataset,
                 "benchmark_sha": item.benchmark_sha,
                 "benchmark_license_status": item.benchmark_license_status,
+                "test_patch_scope": item.test_patch_scope,
+                "evidence_qualification": item.evidence_qualification,
             },
         })
     plan = {
