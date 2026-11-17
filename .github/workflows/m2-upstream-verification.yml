@@ -90,6 +90,11 @@ jobs:
             echo 'Unexpected result: base source passed the fail-to-pass command.' >&2
             exit 1
           fi
+          if [ "$status" -ne 1 ]; then
+            echo "Invalid base-fail evidence: pytest exit $status is not an ordinary test failure." >&2
+            echo 'This keeps the candidate unverified instead of treating setup/collection/selection errors as a relevant failure.' >&2
+            exit 1
+          fi
       - name: Check out and install fixed source
         working-directory: upstream
         run: |
