@@ -6,7 +6,7 @@ M6 adds a validation contract for result records supplied by a future authorized
 
 ## Boundary
 
-- The current clean direct-upstream package remains `blocked_not_runnable`; no real result file exists for it.
+- After the M7 owner acceptance, the clean direct-upstream package can produce a `ready_not_executed` manifest for the approved M7 runner configuration. No real result file exists yet.
 - Fixture results in tests only exercise the intake schema. They are not execution evidence and are not stored as project results.
 - A result row must match the manifest hash, runner identity, task revision, task hash, verifier hash and planned trial index.
 - A complete result set must cover every planned task/trial exactly once.
@@ -14,11 +14,12 @@ M6 adds a validation contract for result records supplied by a future authorized
 - Model access, benchmark data, secrets, artifact uploads and automatic retries violate the result policy.
 - A blocked manifest cannot accept results.
 
-## Future flow
+## M7 flow
 
-1. Build and validate a `ready_not_executed` M4 manifest after repository rights, owner task acceptance and execution authority exist.
-2. Let the separately authorized runner produce `m6-run-result-v0` JSONL records.
-3. Recompute and validate the M4 manifest from suite, source, execution and review evidence.
-4. Run `validate-run-results <manifest> <results>` to check result identity, completeness and policy boundaries.
+1. Build and validate the `ready_not_executed` M4 manifest from the accepted suite, source evidence, execution evidence and review evidence.
+2. Dispatch the approved M7 workflow once: five tasks, three trials each, 15 jobs, `ubuntu-22.04`, 20 minutes per job, at most five concurrent jobs, no automatic retries, models, benchmark data, secrets or artifact uploads.
+3. Extract the `M6_RESULT_JSON=` lines from that run's logs into a result JSONL file.
+4. Recompute and validate the M4 manifest from suite, source, execution and review evidence.
+5. Run `validate-run-results <manifest> <results>` to check result identity, completeness and policy boundaries.
 
 A valid result summary means only that the supplied records match the contract. It does not prove the runner ran, does not authenticate its logs and does not change task acceptance.
