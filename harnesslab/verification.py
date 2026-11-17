@@ -40,10 +40,10 @@ class SourceEvidence:
     license_url: str
     license_file_sha256: str
     license_notes: str
-    benchmark_dataset: str
-    benchmark_url: str
-    benchmark_sha: str
-    benchmark_license_status: str
+    benchmark_dataset: str | None
+    benchmark_url: str | None
+    benchmark_sha: str | None
+    benchmark_license_status: str | None
     status: str
 
 
@@ -132,8 +132,10 @@ def parse_evidence(mapping: dict[str, Any]) -> SourceEvidence:
     source = mapping.get("source")
     license_info = mapping.get("license")
     benchmark = mapping.get("benchmark")
-    if not isinstance(source, dict) or not isinstance(license_info, dict) or not isinstance(benchmark, dict):
-        raise ManifestError("evidence needs source, license and benchmark objects")
+    if not isinstance(source, dict) or not isinstance(license_info, dict):
+        raise ManifestError("evidence needs source and license objects")
+    if benchmark is not None and not isinstance(benchmark, dict):
+        raise ManifestError("evidence benchmark must be an object when present")
     files = source.get("test_files")
     if not isinstance(files, list) or not files or not all(isinstance(item, str) and item for item in files):
         raise ManifestError("source.test_files must be a non-empty list of paths")
@@ -178,10 +180,10 @@ def parse_evidence(mapping: dict[str, Any]) -> SourceEvidence:
         license_url=_https(license_info, "url"),
         license_file_sha256=_hex64(license_info, "file_sha256"),
         license_notes=_text(license_info, "notes", min_length=10),
-        benchmark_dataset=_text(benchmark, "dataset", min_length=3),
-        benchmark_url=_https(benchmark, "url"),
-        benchmark_sha=_sha(benchmark, "sha"),
-        benchmark_license_status=_text(benchmark, "license_status", min_length=3),
+        benchmark_dataset=_text(benchmark, "dataset", min_length=3) if benchmark is not None else None,
+        benchmark_url=_https(benchmark, "url") if benchmark is not None else None,
+        benchmark_sha=_sha(benchmark, "sha") if benchmark is not None else None,
+        benchmark_license_status=_text(benchmark, "license_status", min_length=3) if benchmark is not None else None,
         status=status,
     )
 
@@ -370,8 +372,12 @@ def build_acceptance_status(
     summary = suite_summary(task_items)
     verified_count = sum(1 for row in rows if row["execution_status"] == _EXECUTION_STATUS)
     complete = verified_count == len(rows)
+    if any(item.benchmark_dataset is not None for item in source.values()):
+        rights_work = "accept repository and benchmark-data rights for the intended evaluation use"
+    else:
+        rights_work = "accept repository rights for the intended evaluation use"
     remaining_work = [
-        "accept repository and benchmark-data rights for the intended evaluation use",
+        rights_work,
         "record independent review against docs/task-spec.md for every candidate",
         "obtain separate authority before any coding-agent, model or benchmark-data run",
     ]
