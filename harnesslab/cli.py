@@ -6,7 +6,12 @@ from pathlib import Path
 
 from .compare import Outcome, compare
 from .tasks import ManifestError, load_suite, suite_summary
-from .verification import build_verification_plan, load_evidence
+from .verification import (
+    build_acceptance_status,
+    build_verification_plan,
+    load_evidence,
+    load_execution_evidence,
+)
 
 
 def load(path: str) -> list[Outcome]:
@@ -39,7 +44,22 @@ def main(argv=None) -> int:
     plan = sub.add_parser("plan-verification", help="Prepare a base/fixed verification plan without running it")
     plan.add_argument("suite")
     plan.add_argument("evidence")
+    acceptance = sub.add_parser("acceptance-status", help="Summarize execution evidence and acceptance blockers")
+    acceptance.add_argument("suite")
+    acceptance.add_argument("evidence")
+    acceptance.add_argument("execution")
     args = parser.parse_args(argv)
+    if args.command == "acceptance-status":
+        try:
+            status = build_acceptance_status(
+                load_suite(args.suite),
+                load_evidence(args.evidence),
+                load_execution_evidence(args.execution),
+            )
+        except (ManifestError, OSError) as exc:
+            parser.exit(2, f"Invalid acceptance status: {exc}\n")
+        print(json.dumps(status, sort_keys=True, indent=2))
+        return 0 if status["upstream_source_verified_count"] == status["task_count"] else 3
     if args.command == "plan-verification":
         try:
             prepared = build_verification_plan(load_suite(args.suite), load_evidence(args.evidence))
