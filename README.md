@@ -130,6 +130,8 @@ python -m harnesslab.cli acceptance-status \
 
 See `docs/m3-clean-direct-verification-run.md` for the one-shot M3 run record
 and `docs/m3-m4-independent-review.md` for the read-only independent review.
+See `docs/m4-intended-use-research.md` for the current benchmark intended-use
+and dataset-terms boundary.
 This package is candidate evidence only; it is not an adopted suite, model
 result, coding-agent benchmark or completed harness milestone.
 
