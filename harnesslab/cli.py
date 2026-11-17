@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .compare import Outcome, compare
 from .tasks import ManifestError, load_suite, suite_summary
+from .verification import build_verification_plan, load_evidence
 
 
 def load(path: str) -> list[Outcome]:
@@ -35,7 +36,17 @@ def main(argv=None) -> int:
     suite = sub.add_parser("validate-suite", help="Validate a task manifest without running it")
     suite.add_argument("suite")
     suite.add_argument("--min-accepted", type=int, default=0)
+    plan = sub.add_parser("plan-verification", help="Prepare a base/fixed verification plan without running it")
+    plan.add_argument("suite")
+    plan.add_argument("evidence")
     args = parser.parse_args(argv)
+    if args.command == "plan-verification":
+        try:
+            prepared = build_verification_plan(load_suite(args.suite), load_evidence(args.evidence))
+        except (ManifestError, OSError) as exc:
+            parser.exit(2, f"Invalid verification plan: {exc}\n")
+        print(json.dumps(prepared, sort_keys=True, indent=2))
+        return 0
     if args.command == "validate-suite":
         try:
             summary = suite_summary(load_suite(args.suite))

@@ -48,3 +48,22 @@ python -m harnesslab.cli validate-suite suites/m1-repair-v0.accepted.jsonl --min
 ```
 
 No such accepted suite exists yet.
+
+## Original-source evidence and M2 plan
+
+`suites/m1-repair-v0.source-evidence.jsonl` records the original GitHub issue,
+fix pull request, pinned base commit, fixed merge commit, changed test files and
+pinned license evidence for every candidate. It is metadata, not execution
+evidence.
+
+Prepare the deterministic M2 plan without executing upstream code:
+
+```sh
+python -m harnesslab.cli plan-verification \
+  suites/m1-repair-v0.candidates.jsonl \
+  suites/m1-repair-v0.source-evidence.jsonl
+```
+
+The plan is labelled `prepared_not_approved`. A new external run needs fresh
+approval because the earlier approved Docker pilot was consumed by the
+fixed-code isolation smoke. See `docs/m2-verification-proposal.md`.

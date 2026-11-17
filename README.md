@@ -85,6 +85,21 @@ This is candidate-registry progress only. It has 5 candidates, 0 accepted
 tasks and 0 benchmark results; rights review and base-fail/fixed-pass execution
 validation are still open.
 
+Original-source metadata for those candidates is now recorded in
+`suites/m1-repair-v0.source-evidence.jsonl`. A deterministic, unexecuted M2
+verification plan can be checked without running upstream code:
+
+```sh
+python -m harnesslab.cli plan-verification \
+  suites/m1-repair-v0.candidates.jsonl \
+  suites/m1-repair-v0.source-evidence.jsonl
+```
+
+The plan is `prepared_not_approved`. The completed Docker pilot was fixed-code
+smoke evidence only; fresh approval is still required before cloning upstream
+repositories, installing their dependencies or running their tests on a free
+runner. Model access is not needed for this M2 candidate-verification step.
+
 ## Not yet verified
 
 - No real-model call, coding-agent run or benchmark result.
