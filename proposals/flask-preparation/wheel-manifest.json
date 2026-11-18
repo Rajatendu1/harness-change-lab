@@ -1,0 +1,223 @@
+{
+  "artifacts": [
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/48/9b/dc3bbfc44d851632df958acf9d47e4de662c6bbd238e46798d555d427b27/Jinja2-3.0.0-py3-none-any.whl",
+      "bytes": 133357,
+      "filename": "Jinja2-3.0.0-py3-none-any.whl",
+      "license_files": {
+        "Jinja2-3.0.0.dist-info/LICENSE.rst": "3b49dcee4105eb37bac10faf1be260408fe85d252b8e9df2e0979fc1e094437b"
+      },
+      "license_metadata": "BSD-3-Clause",
+      "name": "Jinja2",
+      "requires_dist": [
+        "MarkupSafe (>=2.0.0rc2)",
+        "Babel (>=2.7) ; extra == 'i18n'"
+      ],
+      "requires_python": ">=3.6",
+      "sha256": "2f2de5285cf37f33d33ecd4a9080b75c87cd0c1994d5a9c6df17131ea1f049c6",
+      "source_metadata_url": "https://pypi.org/pypi/Jinja2/3.0.0/json",
+      "version": "3.0.0"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/53/e8/601efa63c4058311a8bda7984a2fe554b9da574044967d7aee253661ee46/MarkupSafe-2.0.1-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl",
+      "bytes": 30770,
+      "filename": "MarkupSafe-2.0.1-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl",
+      "license_files": {
+        "MarkupSafe-2.0.1.dist-info/LICENSE.rst": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea"
+      },
+      "license_metadata": "BSD-3-Clause",
+      "name": "MarkupSafe",
+      "requires_dist": [],
+      "requires_python": ">=3.6",
+      "sha256": "168cd0a3642de83558a5153c8bd34f175a9a6e7f6dc6384b9655d2697312a646",
+      "source_metadata_url": "https://pypi.org/pypi/MarkupSafe/2.0.1/json",
+      "version": "2.0.1"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/ff/1d/960bb4017c68674a1cb099534840f18d3def3ce44aed12b5ed8b78e0153e/Werkzeug-2.0.0-py3-none-any.whl",
+      "bytes": 288104,
+      "filename": "Werkzeug-2.0.0-py3-none-any.whl",
+      "license_files": {
+        "Werkzeug-2.0.0.dist-info/LICENSE.rst": "3b49dcee4105eb37bac10faf1be260408fe85d252b8e9df2e0979fc1e094437b",
+        "werkzeug/debug/shared/FONT_LICENSE": "2f0015108d68627bd788d313f529c21ff4da2c2c42a5e1f3883acc83480f9002",
+        "werkzeug/debug/shared/ICON_LICENSE.md": "0e103a6358149792707e0d0d14df518f8556213b7cb54c7422f7467f4bb1f7eb"
+      },
+      "license_metadata": "BSD-3-Clause",
+      "name": "Werkzeug",
+      "requires_dist": [
+        "dataclasses ; python_version < \"3.7\"",
+        "watchdog ; extra == 'watchdog'"
+      ],
+      "requires_python": ">=3.6",
+      "sha256": "64c02f6495ba01eddd6625b3675f357cd358a73f1e38458a56ad86c5baa30b53",
+      "source_metadata_url": "https://pypi.org/pypi/Werkzeug/2.0.0/json",
+      "version": "2.0.0"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/80/11/597f9102867dc0972b698972f05f50925f586639e57beba4db352029e8f9/click-8.0.0-py3-none-any.whl",
+      "bytes": 96881,
+      "filename": "click-8.0.0-py3-none-any.whl",
+      "license_files": {
+        "click-8.0.0.dist-info/LICENSE.rst": "9a8ad106a394e853bfe21f42f4e72d592819a22805d991b5f3275029292b658d"
+      },
+      "license_metadata": "BSD-3-Clause",
+      "name": "click",
+      "requires_dist": [
+        "colorama ; platform_system == \"Windows\""
+      ],
+      "requires_python": ">=3.6",
+      "sha256": "e90e62ced43dc8105fb9a26d62f0d9340b5c8db053a814e25d95c19873ae87db",
+      "source_metadata_url": "https://pypi.org/pypi/click/8.0.0/json",
+      "version": "8.0.0"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/8a/0e/97c33bf5009bdbac74fd2beace167cab3f978feb69cc36f1ef79360d6c4e/exceptiongroup-1.3.1-py3-none-any.whl",
+      "bytes": 16740,
+      "filename": "exceptiongroup-1.3.1-py3-none-any.whl",
+      "license_files": {
+        "exceptiongroup-1.3.1.dist-info/licenses/LICENSE": "6e5070d765031e0ad403a1cbf90ae6d19a0228f802e320b7acff460aa72ed47c"
+      },
+      "license_metadata": null,
+      "name": "exceptiongroup",
+      "requires_dist": [
+        "typing-extensions >= 4.6.0; python_version < '3.13'",
+        "pytest >= 6 ; extra == \"test\""
+      ],
+      "requires_python": ">=3.7",
+      "sha256": "a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598",
+      "source_metadata_url": "https://pypi.org/pypi/exceptiongroup/1.3.1/json",
+      "version": "1.3.1"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/56/43/4ca9e49d27a1fcf6bece6f6aec0ea46bb9112489b93d4b688fb415457bdb/iniconfig-2.3.1-py3-none-any.whl",
+      "bytes": 7552,
+      "filename": "iniconfig-2.3.1-py3-none-any.whl",
+      "license_files": {
+        "iniconfig-2.3.1.dist-info/licenses/LICENSE": "3409fa91f7ace557894632676656e32264fe5ef7581535725dc9a23774551bd4"
+      },
+      "license_metadata": null,
+      "name": "iniconfig",
+      "requires_dist": [],
+      "requires_python": ">=3.10",
+      "sha256": "9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7",
+      "source_metadata_url": "https://pypi.org/pypi/iniconfig/2.3.1/json",
+      "version": "2.3.1"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/c4/af/93fb95dc8bc90a5580084f3dc4be049d243c6f687ff2e253ed3a6df30db4/itsdangerous-2.0.0-py3-none-any.whl",
+      "bytes": 18240,
+      "filename": "itsdangerous-2.0.0-py3-none-any.whl",
+      "license_files": {
+        "itsdangerous-2.0.0.dist-info/LICENSE.rst": "63af09891b6be8ad1a4252ed43af0f4efba7fc948e228367bed7f3c5ae0b09d7"
+      },
+      "license_metadata": "BSD-3-Clause",
+      "name": "itsdangerous",
+      "requires_dist": [],
+      "requires_python": ">=3.6",
+      "sha256": "e2cb4ae918f07ab2a2f9a91dec2695bd1f25a19d31861a70015ad537ccb5e807",
+      "source_metadata_url": "https://pypi.org/pypi/itsdangerous/2.0.0/json",
+      "version": "2.0.0"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+      "bytes": 129956,
+      "filename": "packaging-26.3-py3-none-any.whl",
+      "license_files": {
+        "packaging-26.3.dist-info/licenses/LICENSE": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48",
+        "packaging-26.3.dist-info/licenses/LICENSE.APACHE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "packaging-26.3.dist-info/licenses/LICENSE.BSD": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5",
+        "packaging/licenses/__init__.py": "590d12eee73ddbec53b4e9ee5bfc64d9cb3aacb4940e8ebcba260757ce56740b",
+        "packaging/licenses/_spdx.py": "596ec35e2ca0ebcba9fd8343ff0a51625af548786257815f24b41f7e08613314"
+      },
+      "license_metadata": null,
+      "name": "packaging",
+      "requires_dist": [],
+      "requires_python": ">=3.9",
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+      "source_metadata_url": "https://pypi.org/pypi/packaging/26.3/json",
+      "version": "26.3"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/40/9e/2b38731e0fc536806f16490e1a12d7f0dc2a1235aa8cc07bcc75416a7daa/pluggy-1.7.0-py3-none-any.whl",
+      "bytes": 27082,
+      "filename": "pluggy-1.7.0-py3-none-any.whl",
+      "license_files": {
+        "pluggy-1.7.0.dist-info/licenses/LICENSE": "d6b65e6c213a5d0b577911d34d6e5949b9f59d76c238c5071a2f3fc16cfb2606"
+      },
+      "license_metadata": "MIT",
+      "name": "pluggy",
+      "requires_dist": [],
+      "requires_python": ">=3.10",
+      "sha256": "7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec",
+      "source_metadata_url": "https://pypi.org/pypi/pluggy/1.7.0/json",
+      "version": "1.7.0"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/30/3d/64ad57c803f1fa1e963a7946b6e0fea4a70df53c1a7fed304586539c2bac/pytest-8.3.5-py3-none-any.whl",
+      "bytes": 343634,
+      "filename": "pytest-8.3.5-py3-none-any.whl",
+      "license_files": {
+        "pytest-8.3.5.dist-info/LICENSE": "ca836a5f9ecca3b2f350230faa20a48fb8b145653b5568d784862df864706b9b"
+      },
+      "license_metadata": "MIT",
+      "name": "pytest",
+      "requires_dist": [
+        "colorama; sys_platform == \"win32\"",
+        "exceptiongroup>=1.0.0rc8; python_version < \"3.11\"",
+        "iniconfig",
+        "packaging",
+        "pluggy<2,>=1.5",
+        "tomli>=1; python_version < \"3.11\"",
+        "argcomplete; extra == \"dev\"",
+        "attrs>=19.2; extra == \"dev\"",
+        "hypothesis>=3.56; extra == \"dev\"",
+        "mock; extra == \"dev\"",
+        "pygments>=2.7.2; extra == \"dev\"",
+        "requests; extra == \"dev\"",
+        "setuptools; extra == \"dev\"",
+        "xmlschema; extra == \"dev\""
+      ],
+      "requires_python": ">=3.8",
+      "sha256": "c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820",
+      "source_metadata_url": "https://pypi.org/pypi/pytest/8.3.5/json",
+      "version": "8.3.5"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/60/3f/3e3f8fd0919249b0200c80fbc4f9a1e70be19f9883da71dfb7f8b9ab8aca/tomli-2.5.0-py3-none-any.whl",
+      "bytes": 14765,
+      "filename": "tomli-2.5.0-py3-none-any.whl",
+      "license_files": {
+        "tomli-2.5.0.dist-info/licenses/LICENSE": "b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe"
+      },
+      "license_metadata": null,
+      "name": "tomli",
+      "requires_dist": [],
+      "requires_python": ">=3.8",
+      "sha256": "32a7b79ac57a2e83670ce329ccf675798bc5a2094783a63676866b70503f2e2b",
+      "source_metadata_url": "https://pypi.org/pypi/tomli/2.5.0/json",
+      "version": "2.5.0"
+    },
+    {
+      "artifact_url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+      "bytes": 45571,
+      "filename": "typing_extensions-4.16.0-py3-none-any.whl",
+      "license_files": {
+        "typing_extensions-4.16.0.dist-info/licenses/LICENSE": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf"
+      },
+      "license_metadata": null,
+      "name": "typing_extensions",
+      "requires_dist": [],
+      "requires_python": ">=3.9",
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "source_metadata_url": "https://pypi.org/pypi/typing_extensions/4.16.0/json",
+      "version": "4.16.0"
+    }
+  ],
+  "build_hooks_executed": false,
+  "compatibility_choice": "Historical Flask dependencies pinned for imports; MarkupSafe2.0.1 has CPython3.10 wheel. pytest8.3.5 matches existing verifier version. This is a historical compatibility environment, not a current production dependency recommendation.",
+  "python": "CPython3.10/Linux-x86_64",
+  "schema": "flask-local-verifier-dependencies-v1",
+  "security_audit": false,
+  "status": "local_offline_install_and_narrow_controls_verified_not_container_built",
+  "wheels_only": true
+}
