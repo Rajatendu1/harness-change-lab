@@ -2,6 +2,8 @@
 
 ## Latest verified checkpoint
 
+18 November 2026: a local [supplied runner evidence intake](docs/evidence-intake.md) now feeds the paired-comparison CLI. It excludes canned/reference results and transport errors from model-repair metrics, refuses incomplete or changed planned records, and keeps one-task/fixture evidence inconclusive. The 121-file readable development snapshot was downloaded from GitHub, hash-checked and tested: 318 local tests passed with no skips. This is offline software validation, not a new model attempt or changed-image runtime qualification.
+
 18 November 2026: the [single live Click attempt](https://github.com/Rajatendu1/harness-change-lab/actions/runs/44236654519) was excluded after one failed provider transport attempt. No repair was collected, usage and failure cause are unknown, and there was no retry. The temporary provider key was revoked and repository secret deleted, both verified afterward. [Result and remaining diagnostic gap](docs/click-live-attempt-result.md). The model-free mapping pass below remains valid but is not a model repair.
 
 18 November 2026: the separate [Click model-free task mapping diagnostic passed](https://github.com/Rajatendu1/harness-change-lab/actions/runs/44235253963) on its first dispatch. Unchanged source failed 3/3 focused cases; the upstream reference and actual Aider canned edit passed 3/3 in fresh verifier containers. Cleanup completed. This made zero provider calls and demonstrates zero model repairs. [Result, exact inputs and limits](docs/click-model-free-result.md). Local development checks for this newer archive: 283 passed, no skips; the older 92-file source snapshot below remains distinct.
@@ -10,7 +12,7 @@
 
 This is not a real AI repair result, adversarial-scoring proof or production-ready runner. The run made zero provider calls. The earlier real-agent smoke run remains zero successful source repairs.
 
-Readable runtime sources, fixed input manifests and development tests are now in the normal repository tree. All 92 files in `source-publication-manifest.json` were downloaded from GitHub, hash-checked and tested: 244 local development tests passed with no skips. This does not mean every historical document is current. The runtime-only archives remain immutable run inputs, not the primary source-editing interface. Private preparation documents, credentials, chats and repository history were not added in this publication.
+Readable runtime sources, fixed input manifests and development tests are now in the normal repository tree. The earlier 92-file source snapshot was downloaded and hash-checked with 244 passing local tests; the current `source-publication-manifest.json` describes the newer 121-file development snapshot above. This does not mean every historical document is current. The runtime-only archives remain immutable run inputs, not the primary source-editing interface. Private preparation documents, credentials, chats and repository history were not added in this publication.
 
 A proposed paired-regression workflow for coding-agent harness changes.
 
