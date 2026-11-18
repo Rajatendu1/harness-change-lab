@@ -1,0 +1,50 @@
+name: One manual live Click request
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: click-live-single-request
+  cancel-in-progress: false
+jobs:
+  pilot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - name: Verify reviewed live runtime subset
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '0b80bf5e071660abb071b269e7fd4cee47c3c99d7307db121f26f40f4303e5d1  1-harness-click-live-runtime.tar.gz' | sha256sum --check --strict
+          mkdir "$RUNNER_TEMP/click-live-runtime"
+          tar -xzf 1-harness-click-live-runtime.tar.gz -C "$RUNNER_TEMP/click-live-runtime" --no-same-owner --no-same-permissions
+          cd "$RUNNER_TEMP/click-live-runtime"
+          python3 -I - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('.')
+          expected=json.loads((root/'runtime-subset-manifest.json').read_text())['files']
+          assert {p.as_posix() for p in root.rglob('*') if p.is_file()}==set(expected)|{'runtime-subset-manifest.json'}
+          for name,digest in expected.items():
+              path=root/name
+              assert not path.is_symlink() and hashlib.sha256(path.read_bytes()).hexdigest()==digest
+          print(json.dumps({'verified_runtime_subset_files':len(expected)}))
+          PY
+      - name: One approved public-code request with no retry
+        env:
+          DOCKER_BUILDKIT: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+          HARNESS_CLICK_SCOPE: one-public-click-request-no-retry
+          HARNESS_CLICK_TEMP_KEY: ${{ secrets.HARNESS_CLICK_TEMP_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/click-live-runtime"
+          timeout --signal=TERM --kill-after=10s 480s python3 -I proposals/click-runtime/run_pilot.py
+# Prepared only. Scope marker is an operational guard, not owner authority.
+# Operator must verify current free plan, approval and public inputs before dispatch.
+# Operator must revoke key and delete Actions secret after every terminal outcome,
+# including cancellation, setup failure, timeout, quota failure or uncertain response.
+# No artifacts, raw model chats, automatic retries, paid runners or fallback model.
