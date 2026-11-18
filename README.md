@@ -2,7 +2,11 @@
 
 ## Latest verified checkpoint
 
-18 November 2026: a local [supplied runner evidence intake](docs/evidence-intake.md) now feeds the paired-comparison CLI. It excludes canned/reference results and transport errors from model-repair metrics, refuses incomplete or changed planned records, and keeps one-task/fixture evidence inconclusive. The 121-file readable development snapshot was downloaded from GitHub, hash-checked and tested: 318 local tests passed with no skips. This is offline software validation, not a new model attempt or changed-image runtime qualification.
+18 November 2026: [Flask narrow-task preparation](docs/flask-preparation.md) now has local unchanged-base/fix/reference controls, hash-bound source transfer and a separate offline verifier input plan. One blueprint-name test fails on the base and passes on both reference fixes. This is trusted-process local evidence, not Docker qualification or an AI repair. The complete 150-file development/test-support snapshot was downloaded from the pinned public revision, hash-checked and tested: 347 local tests passed with no skips. No new provider request or workflow dispatch was made.
+
+Reproducibility correction: the earlier 121-file manifest left out 19 legacy files needed by the full test command. Its earlier full-suite pass used a fuller checkout. The current manifest explicitly lists those test-support prerequisites. This corrects the snapshot boundary, not the separate recorded runtime results.
+
+18 November 2026: the local [supplied runner evidence intake](docs/evidence-intake.md) feeds the paired-comparison CLI. It excludes canned/reference results and transport errors from model-repair metrics, refuses incomplete or changed planned records, and keeps one-task/fixture evidence inconclusive. Its earlier fuller-checkout test count was 318. This remains offline software validation, not a new model attempt or changed-image runtime qualification.
 
 18 November 2026: the [single live Click attempt](https://github.com/Rajatendu1/harness-change-lab/actions/runs/44236654519) was excluded after one failed provider transport attempt. No repair was collected, usage and failure cause are unknown, and there was no retry. The temporary provider key was revoked and repository secret deleted, both verified afterward. [Result and remaining diagnostic gap](docs/click-live-attempt-result.md). The model-free mapping pass below remains valid but is not a model repair.
 
@@ -12,7 +16,7 @@
 
 This is not a real AI repair result, adversarial-scoring proof or production-ready runner. The run made zero provider calls. The earlier real-agent smoke run remains zero successful source repairs.
 
-Readable runtime sources, fixed input manifests and development tests are now in the normal repository tree. The earlier 92-file source snapshot was downloaded and hash-checked with 244 passing local tests; the current `source-publication-manifest.json` describes the newer 121-file development snapshot above. This does not mean every historical document is current. The runtime-only archives remain immutable run inputs, not the primary source-editing interface. Private preparation documents, credentials, chats and repository history were not added in this publication.
+Readable runtime sources, fixed input manifests, development tests and required legacy test-support files are in the normal repository tree. The current `source-publication-manifest.json` records the pinned 150-file development snapshot tested above; earlier 92-file and 121-file publications remain historical checkpoints, with the 121-file standalone-test limitation corrected above. Historical documents are not necessarily current. Runtime-only archives remain immutable run inputs, not the primary source-editing interface. No private handoffs, credentials, chats or repository history were added in this publication.
 
 A proposed paired-regression workflow for coding-agent harness changes.
 
