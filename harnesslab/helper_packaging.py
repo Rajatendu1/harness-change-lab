@@ -22,7 +22,8 @@ def helper_wheel(source_root, *, role='agent'):
         raise ValueError('Expected trusted helper source directory')
     records={}
     for file in sorted(package.glob('*.py')):
-        if role=='agent' and file.name in ('fixed_hidden_test.py','docker_verifier_child.py','fixed_fixture_score.py','docker_fixture_score.py','protected_score.py'):
+        if role=='agent' and file.name in ('fixed_hidden_test.py','docker_verifier_child.py','fixed_fixture_score.py','docker_fixture_score.py','protected_score.py',
+                                           'click_verifier_child.py','click_docker_score.py','click_pilot.py','click_diagnostic.py','evidence_intake.py'):
             continue
         if file.is_symlink() or not file.is_file() or file.stat().st_size>1024*1024:
             raise ValueError('Unsafe helper input')
