@@ -2,6 +2,11 @@
 
 ## Latest verified checkpoint
 
+18 November 2026: the [corrected Click no-key runtime check](1-r2-model-free-result.md) passed its single dispatch in 72 seconds. Base failed all three focused cases; the known fix and actual Aider canned edit passed all three. Zero real provider calls and zero model repairs. The immutable archive remains the exact run input, separate from later development source.
+
+Current source maintenance adds an [integrated local paired-fixture command](docs/local-paired-workflow.md), release/working-tree helper coherence checks and a regenerated main-source helper manifest. The local canned workflow records one included synthetic pair and one excluded setup-error pair, then abstains. Its review reproduces the journal report and refuses tampering; unknown time/usage stays unknown and no billing amount is inferred. These controller changes do not qualify a changed runtime image or establish real-model efficacy.
+
+
 18 November 2026: the separate [Flask model-free runtime qualification passed](docs/flask-model-free-result.md) on its first and only dispatch. Fresh reference scorers produced unchanged-base1failure, knownfix1pass and name-onlyreference1pass, no skips. ActualPython3.10.22, isolation/resource controls and removal of four containers/two created images were checked. Zero agent/model/provider runs, no retry or stored build artifacts. This is reference-runtime evidence, not an AI repair or paired comparison. The earlier offline preparation below remains its development record.
 
 18 November 2026: [Flask narrow-task preparation](docs/flask-preparation.md) now includes fixed verifier-child and fresh-scorer interfaces, with simulated lifecycle tests and repeated local reference controls at the exact protected-test path. That path check caught and fixed a JUnit classname mismatch before external execution. The one blueprint-name test fails on the base and passes on both reference fixes. This is trusted-process local evidence, not Docker qualification or an AI repair. The complete 154-file development/test-support snapshot was downloaded from the pinned public revision, hash-checked and tested: 363 local tests passed with no skips. No new provider request or workflow dispatch was made.
@@ -199,7 +204,7 @@ evaluation.
 
 ## Not yet verified
 
-- No real-model call, coding-agent run or benchmark result.
+- No successful real-model source repair or representative paired coding benchmark. Prior provider attempts and canned agent editing are recorded separately above.
 - No published package or always-on service.
 - No verified free inference credentials or account quota.
 - No coding-agent, model or benchmark-data rights review or run. The five-task
