@@ -1,0 +1,33 @@
+{
+  "amd64_manifest_digest": "sha256:39b8470a9f625a81098294331d1df87459634eff7f9e3facbd1a9b5739985f45",
+  "architecture": "amd64",
+  "compressed_layer_bytes": 378222987,
+  "config": {
+    "Cmd": [
+      "python3"
+    ],
+    "Env": [
+      "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "LANG=C.UTF-8",
+      "GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D",
+      "PYTHON_VERSION=3.10.22",
+      "PYTHON_SHA256=c61fe9b1a1a7ec2a0b0388e664187c378a5325a89e3606d220abf5bdfccb2543"
+    ]
+  },
+  "content_id": "sha256:6fd6ebbd05fc4cf5dc3a789c47e42f4d787cb9c90fe5d29835875a934680271d",
+  "git_install_in_registry_history": true,
+  "git_runtime_version": "not_verified",
+  "index_digest": "sha256:f72a86806f92fe13a49f49aeca1db0b19ea5cf4a0470b842a01b0e14314945b8",
+  "layers_downloaded": false,
+  "metadata_urls": [
+    "https://registry-1.docker.io/v2/library/python/manifests/3.10-bookworm",
+    "https://registry-1.docker.io/v2/library/python/manifests/sha256:39b8470a9f625a81098294331d1df87459634eff7f9e3facbd1a9b5739985f45",
+    "https://registry-1.docker.io/v2/library/python/blobs/sha256:6fd6ebbd05fc4cf5dc3a789c47e42f4d787cb9c90fe5d29835875a934680271d"
+  ],
+  "observed_tag": "3.10-bookworm",
+  "os": "linux",
+  "python_patch_change": "3.10.12 local reference to metadata-advertised3.10.22; requires fresh install/canned verification",
+  "runtime_verified": false,
+  "selected_for_execution": false,
+  "source": "public_registry_metadata_only_no_layers"
+}
