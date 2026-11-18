@@ -1,5 +1,13 @@
 # Harness change lab
 
+## Latest verified checkpoint
+
+18 November 2026: the fixed model-free Docker adapter check [passed on GitHub Actions](https://github.com/Rajatendu1/harness-change-lab/actions/runs/44226880573). It exercised separate offline-built agent/verifier images, PID/memory/CPU/disk/timeout checks, one canned-response Aider edit, protected fixture controls and cleanup. [Result, failure history and limits](docs/fixed-runtime-result.md).
+
+This is not a real AI repair result, adversarial-scoring proof or production-ready runner. The run made zero provider calls. The earlier real-agent smoke run remains zero successful source repairs.
+
+Readable runtime sources, fixed input manifests and development tests are now in the normal repository tree. All 92 files in `source-publication-manifest.json` were downloaded from GitHub, hash-checked and tested: 244 local development tests passed with no skips. This does not mean every historical document is current. The runtime-only archives remain immutable run inputs, not the primary source-editing interface. Private preparation documents, credentials, chats and repository history were not added in this publication.
+
 A proposed paired-regression workflow for coding-agent harness changes.
 
 Work-in-progress foundation, not a released agent runner. The earlier working name
