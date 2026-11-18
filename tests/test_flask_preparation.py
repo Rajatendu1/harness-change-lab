@@ -7,7 +7,7 @@ from harnesslab import flask_preparation as prep, flask_task as task
 from harnesslab.source_bundle import pack_sources
 
 
-def report(*, name=prep.EXPECTED_TEST, classname='test_selected', failures='0', errors='0', skipped='0', tests='1', children=''):
+def report(*, name=prep.EXPECTED_TEST, classname='.controller-hidden.test_selected', failures='0', errors='0', skipped='0', tests='1', children=''):
     return (f'<testsuites><testsuite tests="{tests}" failures="{failures}" errors="{errors}" skipped="{skipped}">'
             f'<testcase classname="{classname}" name="{name}">{children}</testcase>'
             '</testsuite></testsuites>').encode()
@@ -81,7 +81,7 @@ class FlaskPreparationTests(unittest.TestCase):
             with self.assertRaises(ValueError): prep.parse_protected_result(xml, 0)
 
     def test_duplicate_case_rejected(self):
-        xml = report().replace(b'</testsuite>', b'<testcase name="test_dotted_name_not_allowed" classname="test_selected"/></testsuite>')
+        xml = report().replace(b'</testsuite>', b'<testcase name="test_dotted_name_not_allowed" classname=".controller-hidden.test_selected"/></testsuite>')
         with self.assertRaises(ValueError): prep.parse_protected_result(xml, 0)
 
     def test_multiple_suites_rejected(self):
@@ -95,9 +95,15 @@ class FlaskPreparationTests(unittest.TestCase):
         agent, _ = helper_wheel(root, role='agent')
         verifier, _ = helper_wheel(root, role='verifier')
         with zipfile.ZipFile(io.BytesIO(agent)) as archive:
-            self.assertNotIn('harnesslab/flask_preparation.py', archive.namelist())
+            for name in ('flask_preparation.py', 'flask_verifier_child.py', 'flask_docker_score.py'):
+                self.assertNotIn('harnesslab/' + name, archive.namelist())
         with zipfile.ZipFile(io.BytesIO(verifier)) as archive:
-            self.assertIn('harnesslab/flask_preparation.py', archive.namelist())
+            for name in ('flask_preparation.py', 'flask_verifier_child.py', 'flask_docker_score.py'):
+                self.assertIn('harnesslab/' + name, archive.namelist())
+
+    def test_flat_local_path_not_accepted_as_protected_path(self):
+        with self.assertRaises(ValueError):
+            prep.parse_protected_result(report(classname='test_selected'), 0)
 
     def test_expected_task_scope(self):
         self.assertEqual(task.EDITABLE, ('src/flask/blueprints.py',))
