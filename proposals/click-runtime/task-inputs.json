@@ -1,0 +1,131 @@
+{
+  "task": "m1-click-hyphenated-help-wrap",
+  "base_commit": "8abb77a8432e03ed14a95f972b44f905279415a7",
+  "reference_commit": "a46a95c733d0ed72f63cd2915f2bc4a09a7179f9",
+  "base_files": [
+    {
+      "name": "LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/LICENSE.txt",
+      "bytes": 1475,
+      "sha256": "9a8ad106a394e853bfe21f42f4e72d592819a22805d991b5f3275029292b658d"
+    },
+    {
+      "name": "src/click/__init__.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/__init__.py",
+      "bytes": 5145,
+      "sha256": "5abfc54d37d47cc788b7e7a05e9514787f8c5a0b7db429d0f24d748ac89964ca"
+    },
+    {
+      "name": "src/click/_compat.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/_compat.py",
+      "bytes": 17939,
+      "sha256": "8db1da2965cf3e5dc66c6c53833cbc613ea1cd2440b9d0eb6aa8360eb46d4913"
+    },
+    {
+      "name": "src/click/_termui_impl.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/_termui_impl.py",
+      "bytes": 32697,
+      "sha256": "51b485ef15b4858817817296ea16a85a8fead9ab097fe4fda7778897b8cc82f9"
+    },
+    {
+      "name": "src/click/_textwrap.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/_textwrap.py",
+      "bytes": 6270,
+      "sha256": "ed9d0ded59a7fbae933524d4c29e8e5c96dc5174666044fd87d736b9c0fca104"
+    },
+    {
+      "name": "src/click/_utils.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/_utils.py",
+      "bytes": 1259,
+      "sha256": "c7a62c70514253d091cbca49917fe16281556db1aa83bb389532180c47dc1233"
+    },
+    {
+      "name": "src/click/_winconsole.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/_winconsole.py",
+      "bytes": 8413,
+      "sha256": "a6f0d49ef0be806a9730bd64a2e5b373a95d49de91fd7728595ff31d773f2db7"
+    },
+    {
+      "name": "src/click/core.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/core.py",
+      "bytes": 156341,
+      "sha256": "2f875ed5e331828e48df459732de8551376cd48e706164b285d3afe9e5626287"
+    },
+    {
+      "name": "src/click/decorators.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/decorators.py",
+      "bytes": 21744,
+      "sha256": "b8d08ddd7930a3df66003864bb2826e6dd11f14fe46411618d5e566f81d6efc1"
+    },
+    {
+      "name": "src/click/exceptions.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/exceptions.py",
+      "bytes": 11862,
+      "sha256": "1ef498df81b86ae8ff6d8451f3e4fc094f09c2aff5f8e72c454e1ecdfa337849"
+    },
+    {
+      "name": "src/click/formatting.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/formatting.py",
+      "bytes": 10444,
+      "sha256": "f125b628692f8dfcfd43535b7a88cc1ee64137471f9d0243b389aa0cfea85e6b"
+    },
+    {
+      "name": "src/click/globals.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/globals.py",
+      "bytes": 1923,
+      "sha256": "80cf8d87a0383341c1fd2824685e4ce2770618c0c773f7e51d7bbdfe88781845"
+    },
+    {
+      "name": "src/click/parser.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/parser.py",
+      "bytes": 19052,
+      "sha256": "a09f9f53fde6bf1ba022e36d1da0804d9e7a9601261d18208c9892a84818ae30"
+    },
+    {
+      "name": "src/click/py.typed",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/py.typed",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "src/click/shell_completion.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/shell_completion.py",
+      "bytes": 26058,
+      "sha256": "c5fcba42d9c50bf90367b21a7a80c32fb43f6dda55d0847c7e357b4c95f4e71a"
+    },
+    {
+      "name": "src/click/termui.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/termui.py",
+      "bytes": 35883,
+      "sha256": "16f6546b36d647d191788fc912e32d93e8b64289517f004e6d9604f4896ad1ca"
+    },
+    {
+      "name": "src/click/testing.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/testing.py",
+      "bytes": 29457,
+      "sha256": "e95823823bf2aa65739c2b064778c2893608eaec46080fcd7b7787adf9489b37"
+    },
+    {
+      "name": "src/click/types.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/types.py",
+      "bytes": 47335,
+      "sha256": "30a39185da37bbd98ef47153f7bfd310b04eac44bd9b9b2fe15998406337757e"
+    },
+    {
+      "name": "src/click/utils.py",
+      "url": "https://raw.githubusercontent.com/pallets/click/8abb77a8432e03ed14a95f972b44f905279415a7/src/click/utils.py",
+      "bytes": 21421,
+      "sha256": "4720e22c292047ff1a747546b1ba80e96d1d8e8158e2e21ff01cdddb6498db17"
+    }
+  ],
+  "fixed_source": {
+    "url": "https://raw.githubusercontent.com/pallets/click/a46a95c733d0ed72f63cd2915f2bc4a09a7179f9/src/click/formatting.py",
+    "bytes": 10896,
+    "sha256": "421994c476e0108d521f7c20da7a407a28425dd81afbfe8298bf59d3faf6580f"
+  },
+  "test_source": {
+    "url": "https://raw.githubusercontent.com/pallets/click/a46a95c733d0ed72f63cd2915f2bc4a09a7179f9/tests/test_formatting.py",
+    "bytes": 23233,
+    "sha256": "0cf8ac7d2d3d8b4e6949f41baf2d09cb380a1292624b47ca0a9285e925ab5fe7"
+  }
+}
