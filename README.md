@@ -2,7 +2,7 @@
 
 ## Latest verified checkpoint
 
-18 November 2026: [Flask narrow-task preparation](docs/flask-preparation.md) now has local unchanged-base/fix/reference controls, hash-bound source transfer and a separate offline verifier input plan. One blueprint-name test fails on the base and passes on both reference fixes. This is trusted-process local evidence, not Docker qualification or an AI repair. The complete 150-file development/test-support snapshot was downloaded from the pinned public revision, hash-checked and tested: 347 local tests passed with no skips. No new provider request or workflow dispatch was made.
+18 November 2026: [Flask narrow-task preparation](docs/flask-preparation.md) now includes fixed verifier-child and fresh-scorer interfaces, with simulated lifecycle tests and repeated local reference controls at the exact protected-test path. That path check caught and fixed a JUnit classname mismatch before external execution. The one blueprint-name test fails on the base and passes on both reference fixes. This is trusted-process local evidence, not Docker qualification or an AI repair. The complete 154-file development/test-support snapshot was downloaded from the pinned public revision, hash-checked and tested: 363 local tests passed with no skips. No new provider request or workflow dispatch was made.
 
 Reproducibility correction: the earlier 121-file manifest left out 19 legacy files needed by the full test command. Its earlier full-suite pass used a fuller checkout. The current manifest explicitly lists those test-support prerequisites. This corrects the snapshot boundary, not the separate recorded runtime results.
 
@@ -16,7 +16,7 @@ Reproducibility correction: the earlier 121-file manifest left out 19 legacy fil
 
 This is not a real AI repair result, adversarial-scoring proof or production-ready runner. The run made zero provider calls. The earlier real-agent smoke run remains zero successful source repairs.
 
-Readable runtime sources, fixed input manifests, development tests and required legacy test-support files are in the normal repository tree. The current `source-publication-manifest.json` records the pinned 150-file development snapshot tested above; earlier 92-file and 121-file publications remain historical checkpoints, with the 121-file standalone-test limitation corrected above. Historical documents are not necessarily current. Runtime-only archives remain immutable run inputs, not the primary source-editing interface. No private handoffs, credentials, chats or repository history were added in this publication.
+Readable runtime sources, fixed input manifests, development tests and required legacy test-support files are in the normal repository tree. The current `source-publication-manifest.json` records the pinned 154-file development snapshot tested above; earlier 92-file and 121-file publications remain historical checkpoints, with the 121-file standalone-test limitation corrected above. Historical documents are not necessarily current. Runtime-only archives remain immutable run inputs, not the primary source-editing interface. No private handoffs, credentials, chats or repository history were added in this publication.
 
 A proposed paired-regression workflow for coding-agent harness changes.
 
