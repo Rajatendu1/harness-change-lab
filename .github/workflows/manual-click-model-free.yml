@@ -1,0 +1,45 @@
+name: One manual model-free Click task diagnostic
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: click-model-free-diagnostic
+  cancel-in-progress: false
+jobs:
+  diagnostic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - name: Verify reviewed no-key runtime subset
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '1e3fb8ccc992456cb815c1d349a5c2005e9fb800e0d97f4a48aa3f525c0e249a  harness-click-model-free-runtime.tar.gz' | sha256sum --check --strict
+          mkdir "$RUNNER_TEMP/click-runtime"
+          tar -xzf harness-click-model-free-runtime.tar.gz -C "$RUNNER_TEMP/click-runtime" --no-same-owner --no-same-permissions
+          cd "$RUNNER_TEMP/click-runtime"
+          python3 -I - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('.')
+          expected=json.loads((root/'runtime-subset-manifest.json').read_text())['files']
+          assert {p.as_posix() for p in root.rglob('*') if p.is_file()}==set(expected)|{'runtime-subset-manifest.json'}
+          for name,digest in expected.items():
+              path=root/name
+              assert not path.is_symlink() and hashlib.sha256(path.read_bytes()).hexdigest()==digest
+          print(json.dumps({'verified_runtime_subset_files':len(expected),'real_provider_calls':0}))
+          PY
+      - name: Build offline inputs and run one no-key Click diagnostic
+        env:
+          DOCKER_BUILDKIT: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/click-runtime"
+          timeout --signal=TERM --kill-after=10s 480s python3 -I proposals/click-runtime/run_diagnostic.py
+# No secrets, provider requests, paid runners, uploaded artifacts, raw chats or retry.
+# Known canned edit on a real public task is not a demonstrated model repair.
