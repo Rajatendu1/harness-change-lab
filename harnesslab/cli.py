@@ -78,7 +78,22 @@ def main(argv=None) -> int:
     preflight.add_argument("--runtime-root", required=True)
     review = sub.add_parser("review-experiment", help="Verify and summarize a saved local experiment without execution")
     review.add_argument("directory")
+    intake = sub.add_parser('compare-click-evidence', help='Validate supplied Click runner evidence and compare paired slots; no execution')
+    intake.add_argument('plan')
+    intake.add_argument('evidence', help='JSON array of complete versioned result envelopes')
     args = parser.parse_args(argv)
+    if args.command == 'compare-click-evidence':
+        from .evidence_intake import strict_json, intake_report
+        try:
+            if Path(args.plan).stat().st_size>1024*1024 or Path(args.evidence).stat().st_size>8*1024*1024:
+                raise ValueError('Input size limit exceeded')
+            report=intake_report(strict_json(Path(args.plan).read_text()),
+                                 strict_json(Path(args.evidence).read_text()))
+        except (ValueError, OSError, KeyError, TypeError):
+            # Do not echo paths, arbitrary producer fields or parser error bodies.
+            parser.exit(2, 'Invalid supplied Click evidence; no comparison produced.\n')
+        print(json.dumps(report,sort_keys=True,indent=2))
+        return {'no_detected_regression':0,'regression':1,'insufficient_evidence':3}[report['verdict']]
     if args.command == "review-experiment":
         try:
             print(journal_summary(args.directory))
