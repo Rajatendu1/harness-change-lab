@@ -16,9 +16,18 @@ from .request_budget import BudgetExhausted, ProviderFailure
 
 
 @contextmanager
-def trial_gateway(budget, *, expected_model, max_output_tokens, unix_path=None, shared_group=None):
+def trial_gateway(budget, *, expected_model, max_output_tokens, unix_path=None, shared_group=None,
+                  request_policy=None, token_counter=None):
     if not expected_model or type(max_output_tokens) is not int or max_output_tokens <= 0:
         raise ValueError("Expected a fixed model and positive output-token cap")
+    if (request_policy is None) != (token_counter is None):
+        raise ValueError('Admission policy and reviewed tokenizer are required together')
+    if request_policy is not None:
+        from .request_admission import TextRequestPolicy
+        if (not isinstance(request_policy, TextRequestPolicy) or not callable(token_counter)
+                or request_policy.model != expected_model
+                or request_policy.max_output_tokens != max_output_tokens):
+            raise ValueError('Admission identity and output bound must match gateway')
     group_directory = None
     original_directory_mode = None
     if shared_group is not None:
@@ -69,7 +78,10 @@ def trial_gateway(budget, *, expected_model, max_output_tokens, unix_path=None, 
                 if type(output_cap) is not int or not 0 < output_cap <= max_output_tokens:
                     raise ValueError()
                 payload["max_tokens"] = output_cap
-                body = json.dumps(payload, separators=(",", ":")).encode()
+                if request_policy is not None:
+                    body = request_policy.admit(payload, count_tokens=token_counter)
+                else:
+                    body = json.dumps(payload, separators=(",", ":")).encode()
             except (ValueError, UnicodeDecodeError):
                 self.reply(400, {"error": "Expected bounded non-streaming JSON request"})
                 return
