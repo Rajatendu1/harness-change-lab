@@ -8,6 +8,8 @@ from .compare import Outcome, compare
 from .run_manifest import build_run_manifest, validate_run_manifest
 from .run_results import load_run_results, validate_run_results
 from .tasks import ManifestError, load_suite, suite_summary
+from .runtime_preflight import inspect_os_isolation, inspect_runtime
+from .journal_review import summary as journal_summary
 from .verification import (
     build_acceptance_status,
     build_verification_plan,
@@ -71,7 +73,28 @@ def main(argv=None) -> int:
     results = sub.add_parser("validate-run-results", help="Validate supplied runner results without executing them")
     results.add_argument("manifest")
     results.add_argument("results")
+    preflight = sub.add_parser("runtime-preflight", help="Check a local prepared runtime without models or providers")
+    preflight.add_argument("--python", required=True)
+    preflight.add_argument("--runtime-root", required=True)
+    review = sub.add_parser("review-experiment", help="Verify and summarize a saved local experiment without execution")
+    review.add_argument("directory")
     args = parser.parse_args(argv)
+    if args.command == "review-experiment":
+        try:
+            print(journal_summary(args.directory))
+        except (ValueError, OSError, KeyError, TypeError) as exc:
+            parser.exit(2, f"Invalid experiment journal: {exc}\n")
+        return 0
+    if args.command == "runtime-preflight":
+        try:
+            runtime = inspect_runtime(args.python, args.runtime_root)
+            isolation = inspect_os_isolation()
+        except (ValueError, OSError) as exc:
+            parser.exit(2, f"Invalid local runtime: {exc}\n")
+        print(json.dumps({"schema": "local-runtime-preflight-v0", "runtime": runtime,
+                          "isolation": isolation, "execution_authority": "none", "provider_calls": 0},
+                         sort_keys=True, indent=2))
+        return 0 if isolation["namespace_probe"] == "passed" else 3
     if args.command == "prepare-run-manifest":
         try:
             manifest = build_run_manifest(
