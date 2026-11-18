@@ -1,0 +1,49 @@
+{
+  "status": "local_flask_narrow_controls_passed",
+  "records": [
+    {
+      "stage": "unchanged_base",
+      "exit_code": 1,
+      "tests": 1,
+      "failures": 1,
+      "skipped": 0,
+      "network_namespace": true,
+      "read_only_source": true,
+      "evidence_class": "local_reference_trusted_process_not_model",
+      "adversarial_integrity_verified": false
+    },
+    {
+      "stage": "known_upstream_fix",
+      "exit_code": 0,
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0,
+      "network_namespace": true,
+      "read_only_source": true,
+      "evidence_class": "local_reference_trusted_process_not_model",
+      "adversarial_integrity_verified": false
+    },
+    {
+      "stage": "narrow_reference_patch",
+      "exit_code": 0,
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0,
+      "network_namespace": true,
+      "read_only_source": true,
+      "evidence_class": "local_reference_trusted_process_not_model",
+      "adversarial_integrity_verified": false
+    }
+  ],
+  "protected_test_sha256": "8e44d33f91f5a8166bedcc61f179f75cb144055e356f0d97999a4a8730ae161a",
+  "real_model_repairs": 0,
+  "provider_calls": 0,
+  "container_runtime_verified": false,
+  "historical_broader_card_unchanged": true,
+  "scope": "one upstream blueprint-name test; no endpoint/view-function exception-type requirement",
+  "protected_test_path": ".controller-hidden/test_selected.py",
+  "expected_junit_classname": ".controller-hidden.test_selected",
+  "verifier_child_executed": false,
+  "actual_child_namespace_identity_checks_verified": false,
+  "known_preparation_bug_fixed": "flat rehearsal path omitted protected-directory classname; parser now binds actual protected path"
+}
