@@ -8,6 +8,8 @@ from dataclasses import dataclass
 import json
 from threading import Lock
 from typing import Callable
+import socket
+import ssl
 import urllib.error
 import urllib.request
 
@@ -16,8 +18,34 @@ class BudgetExhausted(RuntimeError):
     pass
 
 
+FAILURE_CATEGORIES = frozenset({
+    'http_error', 'redirect_refused', 'timeout', 'tls_error', 'network_error',
+    'response_too_large', 'invalid_transport_result', 'unknown_transport_error',
+})
+
+
 class ProviderFailure(RuntimeError):
-    pass
+    """Only allowlisted metadata survives. No exception/body text is retained."""
+    def __init__(self, message='Provider attempt failed; not retried', *, category=None, http_status=None):
+        self.category = category if type(category) is str and category in FAILURE_CATEGORIES else 'unknown_transport_error'
+        self.http_status = http_status if type(http_status) is int and 100 <= http_status <= 599 else None
+        super().__init__('Provider attempt failed; not retried')
+
+
+def failure_observation(error):
+    if isinstance(error, ProviderFailure):
+        safe=ProviderFailure(category=error.category,http_status=error.http_status)
+        return dict(failure_category=safe.category,http_status=safe.http_status)
+    reason = error.reason if isinstance(error, urllib.error.URLError) else error
+    if isinstance(reason, (TimeoutError, socket.timeout)):
+        category = 'timeout'
+    elif isinstance(reason, ssl.SSLError):
+        category = 'tls_error'
+    elif isinstance(reason, OSError):
+        category = 'network_error'
+    else:
+        category = 'unknown_transport_error'
+    return dict(failure_category=category, http_status=None)
 
 
 @dataclass(frozen=True)
@@ -28,6 +56,8 @@ class Attempt:
     prompt_tokens: object = None
     completion_tokens: object = None
     total_tokens: object = None
+    failure_category: object = None
+    http_status: object = None
 
 
 def usage_observation(raw):
@@ -73,14 +103,21 @@ def https_transport(url: str, token: str, timeout: float = 60):
         try:
             with opener.open(request, timeout=timeout) as response:
                 if response.status != 200:
-                    raise ProviderFailure("Provider returned non-success status")
+                    raise ProviderFailure(category='http_error', http_status=response.status)
                 data = response.read(8 * 1024 * 1024 + 1)
                 if len(data) > 8 * 1024 * 1024:
-                    raise ProviderFailure("Provider response exceeded size limit")
+                    raise ProviderFailure(category='response_too_large')
                 return data
-        except Exception:
-            # Never retain endpoint, credential or response-body details in errors.
-            raise ProviderFailure("Provider attempt failed; not retried") from None
+        except urllib.error.HTTPError as error:
+            status = error.code if type(error.code) is int else None
+            category = 'redirect_refused' if status is not None and 300 <= status <= 399 else 'http_error'
+            error.close()
+            raise ProviderFailure(category=category, http_status=status) from None
+        except ProviderFailure:
+            raise
+        except Exception as error:
+            observation = failure_observation(error)
+            raise ProviderFailure(category=observation['failure_category']) from None
     return send
 
 
@@ -116,11 +153,13 @@ class TrialRequestBudget:
         try:
             result = self._transport(body)
             if not isinstance(result, bytes):
-                raise TypeError("Invalid provider response type")
-        except Exception:
+                raise ProviderFailure(category='invalid_transport_result')
+        except Exception as error:
+            observation = failure_observation(error)
             with self._lock:
-                self._audit.append(Attempt(number, "failed"))
-            raise ProviderFailure("Provider attempt failed; not retried") from None
+                self._audit.append(Attempt(number, 'failed', **observation))
+            raise ProviderFailure(category=observation['failure_category'],
+                                  http_status=observation['http_status']) from None
         with self._lock:
             self._audit.append(Attempt(number, "returned", **usage_observation(result)))
         return result
