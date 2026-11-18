@@ -2,6 +2,8 @@
 
 ## Latest verified checkpoint
 
+18 November 2026: the separate [Click model-free task mapping diagnostic passed](https://github.com/Rajatendu1/harness-change-lab/actions/runs/44235253963) on its first dispatch. Unchanged source failed 3/3 focused cases; the upstream reference and actual Aider canned edit passed 3/3 in fresh verifier containers. Cleanup completed. This made zero provider calls and demonstrates zero model repairs. [Result, exact inputs and limits](docs/click-model-free-result.md). Local development checks for this newer archive: 283 passed, no skips; the older 92-file source snapshot below remains distinct.
+
 18 November 2026: the fixed model-free Docker adapter check [passed on GitHub Actions](https://github.com/Rajatendu1/harness-change-lab/actions/runs/44226880573). It exercised separate offline-built agent/verifier images, PID/memory/CPU/disk/timeout checks, one canned-response Aider edit, protected fixture controls and cleanup. [Result, failure history and limits](docs/fixed-runtime-result.md).
 
 This is not a real AI repair result, adversarial-scoring proof or production-ready runner. The run made zero provider calls. The earlier real-agent smoke run remains zero successful source repairs.
