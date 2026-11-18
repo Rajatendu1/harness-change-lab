@@ -50,13 +50,14 @@ class HelperPackagingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             package=Path(directory)/'harnesslab';package.mkdir();(package/'__init__.py').write_bytes(b'')
             for name in ('fixed_hidden_test.py','docker_verifier_child.py','fixed_fixture_score.py','protected_score.py',
-                         'click_verifier_child.py','click_docker_score.py','click_pilot.py','click_diagnostic.py','evidence_intake.py'):
+                         'click_verifier_child.py','click_docker_score.py','click_pilot.py','click_diagnostic.py','evidence_intake.py',
+                         'flask_preparation.py','flask_verifier_child.py','flask_docker_score.py','flask_task.py','flask_image_plan.py'):
                 (package/name).write_bytes(b'hidden-proof-sentinel')
             agent,_=helper_wheel(directory,role='agent')
             verifier,_=helper_wheel(directory,role='verifier')
             with zipfile.ZipFile(io.BytesIO(agent)) as archive:
                 self.assertFalse(any('fixed_hidden_test' in name or 'protected_score' in name or 'click_verifier' in name
                                      or 'click_docker_score' in name or 'click_pilot' in name or 'click_diagnostic' in name
-                                     or 'evidence_intake' in name for name in archive.namelist()))
+                                     or 'evidence_intake' in name or '/flask_' in name for name in archive.namelist()))
             with zipfile.ZipFile(io.BytesIO(verifier)) as archive:
                 self.assertEqual(archive.read('harnesslab/fixed_hidden_test.py'),b'hidden-proof-sentinel')
