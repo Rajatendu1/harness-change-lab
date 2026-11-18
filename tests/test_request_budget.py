@@ -100,3 +100,73 @@ class UsageObservationTests(unittest.TestCase):
             boundary.send(b"fixture")
             self.assertEqual(boundary.audit[0].usage_status,"unknown")
             self.assertIsNone(boundary.audit[0].total_tokens)
+
+
+class SafeFailureDiagnosticsTests(unittest.TestCase):
+    def test_http_status_survives_without_private_content_or_retry(self):
+        import io
+        import urllib.error
+        for status in (301,400,401,403,413,429,500,503):
+            error=urllib.error.HTTPError('https://private.invalid?secret=value',status,
+                'private-reason',{'Private-Header':'private'},io.BytesIO(b'private-response'))
+            with patch('urllib.request.build_opener') as builder:
+                builder.return_value.open.side_effect=error
+                budget=TrialRequestBudget(1,https_transport('https://provider.invalid/endpoint','private-token'))
+                with self.assertRaises(ProviderFailure) as caught:budget.send(b'private-request')
+                row=budget.audit[0]
+                self.assertEqual(row.http_status,status)
+                self.assertEqual(row.failure_category,'redirect_refused' if status==301 else 'http_error')
+                self.assertEqual(builder.return_value.open.call_count,1)
+                self.assertNotIn('private',repr(row)+str(caught.exception))
+                with self.assertRaises(BudgetExhausted):budget.send(b'private-request')
+                self.assertEqual(builder.return_value.open.call_count,1)
+
+    def test_network_tls_timeout_categories_no_messages(self):
+        import ssl
+        import urllib.error
+        for error,category in [(TimeoutError('private'),'timeout'),
+                (urllib.error.URLError(TimeoutError('private')),'timeout'),
+                (ssl.SSLError('private'),'tls_error'),
+                (urllib.error.URLError(ssl.SSLError('private')),'tls_error'),
+                (OSError('private'),'network_error'),
+                (ValueError('private'),'unknown_transport_error')]:
+            with patch('urllib.request.build_opener') as builder:
+                builder.return_value.open.side_effect=error
+                budget=TrialRequestBudget(1,https_transport('https://provider.invalid','private-token'))
+                with self.assertRaises(ProviderFailure):budget.send(b'private-request')
+                self.assertEqual(budget.audit[0].failure_category,category)
+                self.assertIsNone(budget.audit[0].http_status)
+                self.assertNotIn('private',repr(budget.audit))
+
+    def test_arbitrary_custom_exception_attributes_are_not_logged(self):
+        error=RuntimeError('private');error.category='private';error.http_status=123
+        def fail(body):raise error
+        budget=TrialRequestBudget(1,fail)
+        with self.assertRaises(ProviderFailure):budget.send(b'private')
+        self.assertEqual(budget.audit[0].failure_category,'unknown_transport_error')
+        self.assertIsNone(budget.audit[0].http_status)
+        self.assertNotIn('private',repr(budget.audit))
+
+    def test_invalid_transport_result_and_oversized_response(self):
+        budget=TrialRequestBudget(1,lambda body:'not bytes private')
+        with self.assertRaises(ProviderFailure):budget.send(b'private')
+        self.assertEqual(budget.audit[0].failure_category,'invalid_transport_result')
+        with patch('urllib.request.build_opener') as builder:
+            response=builder.return_value.open.return_value.__enter__.return_value
+            response.status=200;response.read.return_value=b'x'*(8*1024*1024+1)
+            budget=TrialRequestBudget(1,https_transport('https://provider.invalid','private'))
+            with self.assertRaises(ProviderFailure):budget.send(b'private')
+            self.assertEqual(budget.audit[0].failure_category,'response_too_large')
+
+    def test_allowlist_constructor_refuses_arbitrary_diagnostics(self):
+        for category in ('private', ['private'], {'private':1},None):
+            error=ProviderFailure('private',category=category,http_status='private')
+            self.assertEqual(error.category,'unknown_transport_error')
+            self.assertIsNone(error.http_status)
+            self.assertNotIn('private',str(error))
+        self.assertIsNone(ProviderFailure(http_status=True).http_status)
+
+    def test_success_has_no_failure_diagnostic(self):
+        budget=TrialRequestBudget(1,lambda body:b'{}');budget.send(b'{}')
+        self.assertIsNone(budget.audit[0].failure_category)
+        self.assertIsNone(budget.audit[0].http_status)
