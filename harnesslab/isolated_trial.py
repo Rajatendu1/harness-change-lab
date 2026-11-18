@@ -30,7 +30,8 @@ class ChildResult:
 
 
 def isolated_trial(command, *, workspace, budget, model, max_output_tokens,
-                   timeout_s, read_only_paths=(), resource_limits=None):
+                   timeout_s, read_only_paths=(), resource_limits=None,
+                   request_policy=None, token_counter=None):
     if not command or timeout_s <= 0:
         raise ValueError('Expected command and positive wall-clock bound')
     limits = dict(address_space_bytes=2 * 1024**3, cpu_seconds=60,
@@ -67,7 +68,9 @@ def isolated_trial(command, *, workspace, budget, model, max_output_tokens,
             args.extend(['--ro-bind', path, path])
         args += ['/usr/bin/python3', '/bootstrap.py', json.dumps(list(command)), json.dumps(limits)]
         started = time.monotonic()
-        with trial_gateway(budget, expected_model=model, max_output_tokens=max_output_tokens, unix_path=socket_path), syscall_filter() as filter_fd:
+        with trial_gateway(budget, expected_model=model, max_output_tokens=max_output_tokens,
+                           unix_path=socket_path, request_policy=request_policy,
+                           token_counter=token_counter), syscall_filter() as filter_fd:
             args[1:1] = ['--seccomp', str(filter_fd)]
             process = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                        stderr=subprocess.DEVNULL, start_new_session=True, pass_fds=(filter_fd,))
