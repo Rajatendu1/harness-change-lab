@@ -18,9 +18,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo '0b80bf5e071660abb071b269e7fd4cee47c3c99d7307db121f26f40f4303e5d1  1-harness-click-live-runtime.tar.gz' | sha256sum --check --strict
+          echo '10b67ba6de086eede1ea2d1e005fd70d04f53261ef2e8759a327c32f8732416c  2-click-diagnostic-enabled-review.tar.gz' | sha256sum --check --strict
           mkdir "$RUNNER_TEMP/click-live-runtime"
-          tar -xzf 1-harness-click-live-runtime.tar.gz -C "$RUNNER_TEMP/click-live-runtime" --no-same-owner --no-same-permissions
+          tar -xzf 2-click-diagnostic-enabled-review.tar.gz -C "$RUNNER_TEMP/click-live-runtime" --no-same-owner --no-same-permissions
           cd "$RUNNER_TEMP/click-live-runtime"
           python3 -I - <<'PY'
           import hashlib,json,pathlib
