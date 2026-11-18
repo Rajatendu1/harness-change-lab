@@ -12,6 +12,7 @@ TEST_NAME = '.controller-hidden/test_selected.py'
 TEST_HASH = '8e44d33f91f5a8166bedcc61f179f75cb144055e356f0d97999a4a8730ae161a'
 SCORE_NAMES = tuple(sorted(BASE_NAMES + (TEST_NAME,)))
 EXPECTED_TEST = 'test_dotted_name_not_allowed'
+EXPECTED_CLASS = '.controller-hidden.test_selected'
 MAX_REPORT = 1024 * 1024
 
 
@@ -50,7 +51,7 @@ def parse_protected_result(report, exit_code):
     if suite.get('tests') != '1' or suite.get('errors') != '0' or suite.get('skipped') != '0':
         raise ValueError('Exact protected collection failed')
     cases = list(suite.iter('testcase'))
-    if len(cases) != 1 or cases[0].get('name') != EXPECTED_TEST or cases[0].get('classname') != 'test_selected':
+    if len(cases) != 1 or cases[0].get('name') != EXPECTED_TEST or cases[0].get('classname') != EXPECTED_CLASS:
         raise ValueError('Protected case identity mismatch')
     case = cases[0]
     if any(tag.tag in ('error', 'skipped', 'testcase', 'testsuite') for tag in case.iter() if tag is not case):
