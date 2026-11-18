@@ -1,0 +1,69 @@
+# REVIEW DRAFT ONLY. Not published or authorized to dispatch.
+name: One manual model-free Flask verifier qualification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flask-model-free-qualification
+  cancel-in-progress: false
+jobs:
+  qualification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - name: Verify and extract reviewed no-key package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -I - <<'PY'
+          import hashlib,io,json,os,pathlib,tarfile
+          archive=pathlib.Path('1-flask-model-free-runtime-review.tar.gz')
+          expected_digest='a4fb27c9a99dd126e6dd0f4e2800f201d7df274a7e2ba7c2ffd2cdfff4c2e1d8'
+          assert archive.is_file() and not archive.is_symlink() and archive.stat().st_size<=4*1024*1024
+          raw=archive.read_bytes(); assert hashlib.sha256(raw).hexdigest()==expected_digest
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'flask-runtime';root.mkdir()
+          records={};total=0
+          with tarfile.open(fileobj=io.BytesIO(raw),mode='r:gz') as tar:
+              for member in tar:
+                  name=member.name
+                  assert name and not name.startswith('/') and '\\' not in name
+                  assert all(x not in ('','.','..') for x in name.split('/'))
+                  assert name not in records and member.isreg() and not member.pax_headers
+                  assert 0<=member.size<=4*1024*1024 and len(records)<256
+                  total+=member.size;assert total<=8*1024*1024
+                  with tar.extractfile(member) as stream:data=stream.read(member.size+1)
+                  assert len(data)==member.size;records[name]=data
+          manifest=json.loads(records.pop('runtime-subset-manifest.json'))
+          assert manifest['schema']=='prepared-flask-model-free-runtime-subset-v1'
+          assert set(records)==set(manifest['files'])
+          for name,data in records.items():assert hashlib.sha256(data).hexdigest()==manifest['files'][name]
+          for name,data in records.items():
+              path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
+          print(json.dumps({'verified_files':len(records),'provider_calls':0,'dispatch_does_not_imply_model_authority':True}))
+          PY
+      - name: One bounded Flask verifier build and reference qualification
+        env:
+          DOCKER_BUILDKIT: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/flask-runtime"
+          timeout --signal=TERM --kill-after=20s 420s python3 -I run_qualification.py
+      - name: Recheck only this job's recorded container and image cleanup
+        if: always()
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f "$RUNNER_TEMP/flask-runtime/cleanup_qualification.py" ]; then
+            cd "$RUNNER_TEMP/flask-runtime"
+            timeout --signal=TERM --kill-after=5s 90s python3 -I cleanup_qualification.py
+          fi
+# No secrets, model/provider requests, agent run, paid runner, artifact/cache
+# export, image push, automatic retry, repository edits or Click input changes.
