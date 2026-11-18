@@ -1,0 +1,75 @@
+{
+  "adversarial_integrity_verified": false,
+  "evidence_class": "public_real_task_known_canned_edit_not_model",
+  "image_cleanup_confirmed": true,
+  "input_summary": {
+    "bytes": 136393186,
+    "files": 130,
+    "status": "prepared_exact_input_context_not_built"
+  },
+  "real_model_repairs": 0,
+  "real_provider_calls": 0,
+  "records": [
+    {
+      "score": {
+        "adversarial_integrity_verified": false,
+        "evidence_class": "prepared_fresh_container_trusted_process_score",
+        "failures": 3,
+        "outcome": "reference_verifier_fail",
+        "passed": false,
+        "reference_mode": true,
+        "runtime_qualified": false,
+        "skipped": 0,
+        "status": "click_verifier_result",
+        "tests": 3
+      },
+      "stage": "unchanged_base"
+    },
+    {
+      "score": {
+        "adversarial_integrity_verified": false,
+        "evidence_class": "prepared_fresh_container_trusted_process_score",
+        "failures": 0,
+        "outcome": "reference_verifier_pass",
+        "passed": true,
+        "reference_mode": true,
+        "runtime_qualified": false,
+        "skipped": 0,
+        "status": "click_verifier_result",
+        "tests": 3
+      },
+      "stage": "known_upstream_fix"
+    },
+    {
+      "result": {
+        "adversarial_integrity_verified": false,
+        "evidence_class": "prepared_single_task_pilot_trusted_process_not_adversarial",
+        "focused_tests": 3,
+        "outcome": "source_patch_verifier_pass",
+        "provider_attempts": 1,
+        "provider_audit": [
+          {
+            "completion_tokens": null,
+            "failure_category": null,
+            "http_status": null,
+            "number": 1,
+            "outcome": "returned",
+            "prompt_tokens": null,
+            "total_tokens": null,
+            "usage_status": "unknown"
+          }
+        ],
+        "provider_outcomes": [
+          "returned"
+        ],
+        "runtime_qualified": false,
+        "score_status": "verified_focused_collection",
+        "stage": "complete",
+        "status": "scored",
+        "tokenizer_container_cleanup_confirmed": true
+      },
+      "stage": "actual_Aider_canned_edit_and_fresh_score"
+    }
+  ],
+  "status": "click_model_free_task_mapping_passed"
+}
