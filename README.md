@@ -2,6 +2,8 @@
 
 ## Latest verified checkpoint
 
+18 November 2026: the separate [Flask model-free runtime qualification passed](docs/flask-model-free-result.md) on its first and only dispatch. Fresh reference scorers produced unchanged-base1failure, knownfix1pass and name-onlyreference1pass, no skips. ActualPython3.10.22, isolation/resource controls and removal of four containers/two created images were checked. Zero agent/model/provider runs, no retry or stored build artifacts. This is reference-runtime evidence, not an AI repair or paired comparison. The earlier offline preparation below remains its development record.
+
 18 November 2026: [Flask narrow-task preparation](docs/flask-preparation.md) now includes fixed verifier-child and fresh-scorer interfaces, with simulated lifecycle tests and repeated local reference controls at the exact protected-test path. That path check caught and fixed a JUnit classname mismatch before external execution. The one blueprint-name test fails on the base and passes on both reference fixes. This is trusted-process local evidence, not Docker qualification or an AI repair. The complete 154-file development/test-support snapshot was downloaded from the pinned public revision, hash-checked and tested: 363 local tests passed with no skips. No new provider request or workflow dispatch was made.
 
 Reproducibility correction: the earlier 121-file manifest left out 19 legacy files needed by the full test command. Its earlier full-suite pass used a fuller checkout. The current manifest explicitly lists those test-support prerequisites. This corrects the snapshot boundary, not the separate recorded runtime results.
