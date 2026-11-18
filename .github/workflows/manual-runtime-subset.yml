@@ -1,0 +1,47 @@
+name: One manual runtime-subset qualification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fixed-model-free-qualification
+  cancel-in-progress: false
+jobs:
+  qualification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - name: Verify and extract exact runtime-only subset
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'f7b43ca352213986c63c9f0783983155cf0a4f7757a0d2f12a65fab935c03c7c  1-harness-runtime-1fe80df.tar.gz' | sha256sum --check --strict
+          mkdir "$RUNNER_TEMP/frozen-runtime"
+          tar -xzf 1-harness-runtime-1fe80df.tar.gz -C "$RUNNER_TEMP/frozen-runtime" --no-same-owner --no-same-permissions
+          cd "$RUNNER_TEMP/frozen-runtime"
+          python3 -I - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('.')
+          manifest=json.loads((root/'runtime-subset-manifest.json').read_text())
+          expected=manifest['files']
+          actual={p.as_posix() for p in root.rglob('*') if p.is_file()}
+          assert actual==set(expected)|{'runtime-subset-manifest.json'}
+          for name,digest in expected.items():
+              p=root/name
+              assert not p.is_symlink() and hashlib.sha256(p.read_bytes()).hexdigest()==digest
+          print(json.dumps({'runtime_subset_files':len(expected),'source_revision':manifest['source_revision'],'clean_source_tree_publication':False}))
+          PY
+      - name: Bounded offline build and model-free qualification
+        env:
+          DOCKER_BUILDKIT: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/frozen-runtime"
+          timeout --signal=TERM --kill-after=10s 1000s python3 -I proposals/docker-runtime/one_job_proposal.py
+# Manual only. No models, secrets, saved artifacts, caches, paid runner or retries.
+# This runtime-only archive is not the complete readable project source tree.
