@@ -18,9 +18,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo 'b9c4c13465d8d998c1bfa370ff59a35168e62f84827a4f46e07b535375d2eacd  1-harness-runtime-diagnostic.tar.gz' | sha256sum --check --strict
+          echo '70d67bb6c8a6a5f78180b32a813e5b8bdd2bf2b3b588c5a9500bced458975036  1-harness-runtime-memory.tar.gz' | sha256sum --check --strict
           mkdir "$RUNNER_TEMP/frozen-runtime"
-          tar -xzf 1-harness-runtime-diagnostic.tar.gz -C "$RUNNER_TEMP/frozen-runtime" --no-same-owner --no-same-permissions
+          tar -xzf 1-harness-runtime-memory.tar.gz -C "$RUNNER_TEMP/frozen-runtime" --no-same-owner --no-same-permissions
           cd "$RUNNER_TEMP/frozen-runtime"
           python3 -I - <<'PY'
           import hashlib,json,pathlib
