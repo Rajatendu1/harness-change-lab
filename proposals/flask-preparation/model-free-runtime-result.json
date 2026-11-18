@@ -1,0 +1,85 @@
+{
+  "run_url": "https://github.com/Rajatendu1/harness-change-lab/actions/runs/44258824645",
+  "job_url": "https://github.com/Rajatendu1/harness-change-lab/actions/runs/44258824645/job/134646921095",
+  "workflow_commit": "d9ef29c8effa897ab11f3ecb861614763fc65e97",
+  "attempt": 1,
+  "archive_sha256": "a4fb27c9a99dd126e6dd0f4e2800f201d7df274a7e2ba7c2ffd2cdfff4c2e1d8",
+  "artifact_count": 0,
+  "log_records": [
+    {
+      "verified_files": 110,
+      "provider_calls": 0,
+      "dispatch_does_not_imply_model_authority": true
+    },
+    {
+      "adversarial_integrity_verified": false,
+      "agent_runs": 0,
+      "automatic_retries": 0,
+      "created_image_count": 2,
+      "evidence_class": "public_real_source_reference_controls_not_agent_or_model",
+      "image_cleanup_confirmed": true,
+      "probe_container_removal_confirmed": true,
+      "real_model_repairs": 0,
+      "real_provider_calls": 0,
+      "records": [
+        {
+          "score": {
+            "adversarial_integrity_verified": false,
+            "evidence_class": "prepared_fresh_container_trusted_process_score",
+            "failures": 1,
+            "outcome": "reference_verifier_fail",
+            "passed": false,
+            "reference_mode": true,
+            "runtime_qualified": false,
+            "skipped": 0,
+            "status": "flask_verifier_result",
+            "tests": 1
+          },
+          "stage": "unchanged_base"
+        },
+        {
+          "score": {
+            "adversarial_integrity_verified": false,
+            "evidence_class": "prepared_fresh_container_trusted_process_score",
+            "failures": 0,
+            "outcome": "reference_verifier_pass",
+            "passed": true,
+            "reference_mode": true,
+            "runtime_qualified": false,
+            "skipped": 0,
+            "status": "flask_verifier_result",
+            "tests": 1
+          },
+          "stage": "known_upstream_fix"
+        },
+        {
+          "score": {
+            "adversarial_integrity_verified": false,
+            "evidence_class": "prepared_fresh_container_trusted_process_score",
+            "failures": 0,
+            "outcome": "reference_verifier_pass",
+            "passed": true,
+            "reference_mode": true,
+            "runtime_qualified": false,
+            "skipped": 0,
+            "status": "flask_verifier_result",
+            "tests": 1
+          },
+          "stage": "narrow_reference_patch"
+        }
+      ],
+      "resource_probes": [
+        "pids",
+        "cpu",
+        "memory"
+      ],
+      "status": "flask_model_free_runtime_controls_passed",
+      "verifier_image_built_and_verified": true
+    },
+    {
+      "containers_checked": 4,
+      "images_checked": 2,
+      "status": "flask_recorded_identity_cleanup_confirmed"
+    }
+  ]
+}
