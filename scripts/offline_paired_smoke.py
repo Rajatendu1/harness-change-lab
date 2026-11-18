@@ -35,10 +35,10 @@ def main():
     records=[]
     for task_id,identity in tasks.items():
         for configuration,value in (('baseline',2),('candidate',1)):
-            command=[sys.executable,str(Path(__file__).with_name('offline_controller_smoke.py')),
+            command=[sys.executable,'-m','scripts.offline_controller_smoke',
                      '--runtime-root',args.runtime_root,'--fixture-return',str(value)]
             if task_id=='broken-setup': command.append('--broken-test-setup')
-            result=subprocess.run(command,stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=60)
+            result=subprocess.run(command,cwd=Path(__file__).resolve().parents[1],stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=60)
             if result.returncode not in (0,1):
                 raise RuntimeError('Offline fixture process failed before producing evidence')
             evidence=json.loads(result.stdout)
