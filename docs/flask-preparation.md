@@ -38,6 +38,14 @@ Twelve wheel artifacts were downloaded without source builds. Their filenames, s
 - Its local report parser requires the exact test name/class, one suite and case, no collection errors or skips, and matching exit/failure counts. It rejects declarations, oversized XML and abnormal exits. It does not authenticate reports or make the scorer safe against hostile code.
 - The preparation scorer contract is excluded from the editing helper package and included in the verifier helper package. No new helper image has been built or qualified.
 
+## Prepared verifier execution interface
+
+The fixed `flask_verifier_child.py` operation checks the expected container identity/workspace/cgroup and pytest/Python versions before accepting a bounded stdin archive. It imports into an empty source root, runs only the protected test with a fixed command and disabled automatic pytest plugins, and reads a bounded regular single-link report without following symlinks. Its error exit does not print raw exception details. The caller remains responsible for a correctly qualified image, process cleanup and runtime policy.
+
+`flask_docker_score.py` prepares one fresh verifier container, checks denials and keeper-only state before and after the operation, transfers source/test bytes only through stdin, validates a strict JSON result and discards any result if container removal is unconfirmed. Reference results stay separate. Its lifecycle tests use simulated adapters, not Docker.
+
+Local execution at the actual `.controller-hidden/test_selected.py` path found a preparation bug: pytest includes `.controller-hidden` in the case classname, unlike the earlier flat-path rehearsal. The parser now binds that exact protected-path classname and rejects the flat-path report. Repeated local base/fix/name-only controls all matched the expected failure/pass/pass outcomes at the actual protected path. This fixes a mapping error before external execution; it is still not a container qualification or adversarial-integrity result.
+
 ## Still required
 
 A separate Flask-only verifier recipe and exact 16-file dependency/helper context are prepared, not built. The context records its exact byte total, contains neither Flask source nor its protected test, refuses unlisted files and uses only hash-pinned binary wheels with network disabled for build steps. This validates a proposed input boundary, not an image or runtime. The base digest comes from previously recorded immutable candidate metadata, not a fresh availability check. Local controls used Python3.10.12; the candidate base advertises3.10.22, so fresh image controls are still required.
