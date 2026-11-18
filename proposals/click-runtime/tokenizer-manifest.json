@@ -1,0 +1,8 @@
+{
+  "url": "https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken",
+  "sha256": "446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d",
+  "bytes": 3613922,
+  "license_sha256": "418cb499b436128d653d79941333a5437b7be2ea9213dcc2f04d15d5d2c51d86",
+  "license_source": "https://raw.githubusercontent.com/openai/tiktoken/main/LICENSE",
+  "encoding_rights_reference": "https://github.com/openai/tiktoken/issues/92"
+}
